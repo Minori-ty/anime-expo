@@ -49,6 +49,6 @@ export const EWeekday = Enum({
     },
     sunday: {
         value: 7,
-        label: '周七',
+        label: '周日',
     },
 } as const)

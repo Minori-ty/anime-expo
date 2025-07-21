@@ -12,7 +12,7 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import React, { createContext, useContext, useState } from 'react'
-import { Dimensions, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
 
@@ -40,13 +40,13 @@ const routes = EWeekday.toMenu().map(item => {
 })
 
 const renderScene = SceneMap({
-    monday: () => <TabViewComponent updateWeekday={EWeekday.monday} />,
-    tuesday: () => <TabViewComponent updateWeekday={EWeekday.tuesday} />,
-    wednesday: () => <TabViewComponent updateWeekday={EWeekday.wednesday} />,
-    thursday: () => <TabViewComponent updateWeekday={EWeekday.thursday} />,
-    friday: () => <TabViewComponent updateWeekday={EWeekday.friday} />,
-    saturday: () => <TabViewComponent updateWeekday={EWeekday.saturday} />,
-    sunday: () => <TabViewComponent updateWeekday={EWeekday.sunday} />,
+    [EWeekday.monday]: () => <TabViewComponent updateWeekday={EWeekday.monday} />,
+    [EWeekday.tuesday]: () => <TabViewComponent updateWeekday={EWeekday.tuesday} />,
+    [EWeekday.wednesday]: () => <TabViewComponent updateWeekday={EWeekday.wednesday} />,
+    [EWeekday.thursday]: () => <TabViewComponent updateWeekday={EWeekday.thursday} />,
+    [EWeekday.friday]: () => <TabViewComponent updateWeekday={EWeekday.friday} />,
+    [EWeekday.saturday]: () => <TabViewComponent updateWeekday={EWeekday.saturday} />,
+    [EWeekday.sunday]: () => <TabViewComponent updateWeekday={EWeekday.sunday} />,
 })
 export default function Index() {
     const [index, setIndex] = useState<number>(EWeekday.monday)
@@ -57,17 +57,24 @@ export default function Index() {
     })
 
     return (
-        <SafeAreaView edges={['top']}>
+        <SafeAreaView edges={['top']} className="flex-1">
             <scheduleContext.Provider value={{ list }}>
                 <TabView
                     navigationState={{ index, routes }}
                     renderScene={renderScene}
                     onIndexChange={setIndex}
-                    initialLayout={{ width: Dimensions.get('window').width }}
+                    overScrollMode={'auto'}
                     renderTabBar={props => (
-                        <TabBar {...props} scrollEnabled activeColor="#fb7299" inactiveColor="#9E9E9E" />
+                        <TabBar
+                            {...props}
+                            scrollEnabled
+                            activeColor="#fb7299"
+                            inactiveColor="#9E9E9E"
+                            tabStyle={styles.tabBarTab}
+                            style={styles.tabBar}
+                        />
                     )}
-                ></TabView>
+                />
             </scheduleContext.Provider>
         </SafeAreaView>
     )
@@ -76,7 +83,9 @@ export default function Index() {
 function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.valueType }) {
     const { list } = useSchedule()
     const animeList = list.filter(item => dayjs(item.firstEpisodeYYYYMMDDHHmm).isoWeekday() === updateWeekday)
-    if (!animeList.length) {
+    console.log(animeList)
+
+    if (animeList.length === 0) {
         return <Empty />
     }
 
@@ -120,7 +129,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
             <View>
                 {animeList.map(item => {
                     return (
-                        <TouchableOpacity key={item.id} onPress={() => router.push(`/animeDetail/${item.id}`)}>
+                        <TouchableOpacity key={item.id}>
                             <View>
                                 <Image
                                     source={item.cover}
@@ -155,3 +164,18 @@ function EpisodeTip({ currentEpisode, firstEpisodeYYYYMMDDHHmm }: IEpisodeTipPro
     }
     return <Text>即将更新 第{currentEpisode + 1}集</Text>
 }
+
+const styles = StyleSheet.create({
+    tabBar: {
+        elevation: 0, // 移除 Android 阴影
+        shadowOpacity: 0, // 移除 iOS 阴影
+        shadowRadius: 0, // 移除 iOS 阴影
+        shadowOffset: { height: 0, width: 0 }, // 移除 iOS 阴影
+        borderBottomWidth: 0, // 移除可能的底部边框
+        backgroundColor: '#fff',
+    },
+    tabBarTab: {
+        width: 80,
+        backgroundColor: '#fff',
+    },
+})
