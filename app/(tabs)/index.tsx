@@ -121,14 +121,14 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
     const router = useRouter()
 
     return (
-        <View className="my-1 flex-row">
+        <View className="my-2 flex-row">
             <View className="w-16 items-center justify-start">
                 <Text>{time}</Text>
             </View>
             <View className="flex-1">
                 {animeList.map(item => {
                     return (
-                        <TouchableOpacity key={item.id}>
+                        <TouchableOpacity key={item.id} activeOpacity={0.5}>
                             <View className="mb-3 h-28 flex-1 flex-row">
                                 <Image
                                     source={item.cover}
@@ -136,7 +136,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
                                     contentFit="cover"
                                     transition={1000}
                                     cachePolicy={'memory-disk'}
-                                    className="mr-3 h-28 w-16 rounded-md"
+                                    style={styles.cover}
                                 />
                                 <View className="flex-1">
                                     <Text className="font-black">{item.name}</Text>
@@ -160,9 +160,9 @@ interface IEpisodeTipProps {
 }
 function EpisodeTip({ currentEpisode, firstEpisodeYYYYMMDDHHmm }: IEpisodeTipProps) {
     if (isCurrentWeekdayUpdateTimePassed(firstEpisodeYYYYMMDDHHmm)) {
-        return <Text>更新到 第{currentEpisode}集</Text>
+        return <Text className="mt-3 text-sm text-[#fb7299]">更新到 第{currentEpisode}集</Text>
     }
-    return <Text>即将更新 第{currentEpisode + 1}集</Text>
+    return <Text className="mt-3 text-sm text-[#9E9E9E]">即将更新 第{currentEpisode + 1}集</Text>
 }
 
 const styles = StyleSheet.create({
@@ -177,5 +177,11 @@ const styles = StyleSheet.create({
     tabBarTab: {
         width: 80,
         backgroundColor: '#fff',
+    },
+    cover: {
+        width: 70,
+        borderRadius: 5,
+        marginRight: 10,
+        height: 70 * 1.5,
     },
 })

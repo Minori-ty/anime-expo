@@ -39,6 +39,36 @@ export async function getAnime() {
     })
 }
 
+export async function getAnimeById(id: number) {
+    const list = await db.select().from(animeTable).where(eq(animeTable.id, id))
+    if (list.length === 0) {
+        return undefined
+    }
+    const anime = list[0]
+    const { name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = anime
+    const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday()
+    const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
+    const lastEpisodeTimestamp = dayjs
+        .unix(firstEpisodeTimestamp)
+        .add(totalEpisode * 7, 'day')
+        .unix()
+    const lastEpisodeYYYYMMDDHHmm = dayjs.unix(lastEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
+    const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
+
+    return {
+        id,
+        name,
+        currentEpisode,
+        totalEpisode,
+        cover,
+        updateWeekday,
+        firstEpisodeYYYYMMDDHHmm,
+        lastEpisodeYYYYMMDDHHmm,
+        status,
+        updateTimeHHmm: dayjs(firstEpisodeYYYYMMDDHHmm).format('YYYY-MM-DD HH:mm'),
+    }
+}
+
 export async function deleteAnimeById(id: number) {
     return await db.transaction(async tx => {
         await tx.delete(animeTable).where(eq(animeTable.id, id))
@@ -63,6 +93,26 @@ export async function addAnime(data: IInsertAnimeData) {
         const anime = animeList[0]
         await addScheduleIfNeed(tx, anime.id, data)
         await addToBeUpdatedIfNeed(tx, anime.id, data)
+    })
+}
+interface IUpdateAnime extends IInsertAnimeData {
+    id: number
+}
+export async function updateAnime(data: IUpdateAnime) {
+    return await db.transaction(async tx => {
+        const { id, name, cover, totalEpisode, currentEpisode, firstEpisodeTimestamp } = data
+        const lastEpisodeTimestamp = dayjs
+            .unix(firstEpisodeTimestamp)
+            .add(totalEpisode * 7, 'day')
+            .unix()
+        const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
+        const anime = await getAnimeById(id)
+        if (!anime) {
+            console.log('此id的动漫不存在')
+            return false
+        }
+        if (status === EStatus.completed) {
+        }
     })
 }
 

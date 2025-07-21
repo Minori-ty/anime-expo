@@ -1,5 +1,4 @@
-import { TSerializingForm } from '@/components/BaseForm'
-import { EStatus } from '@/enums'
+import { EStatus, EWeekday } from '@/enums'
 import dayjs from 'dayjs'
 
 function getUpdateWeekday(YYYYMMDDHHmm: string) {
@@ -64,9 +63,15 @@ export function getMondayTimestampInThisWeek() {
     return dayjs().isoWeekday(1).hour(0).minute(0).second(0).unix()
 }
 
-export function getFirstEpisodeTimestamp(data: TSerializingForm) {
+interface IGetFirstEpisodeTimestamp {
+    currentEpisode: number
+    updateTimeHHmm: string
+    updateWeekday: typeof EWeekday.valueType
+}
+export function getFirstEpisodeTimestamp(data: IGetFirstEpisodeTimestamp) {
     const { currentEpisode, updateTimeHHmm, updateWeekday } = data
-    const [hour, minute] = updateTimeHHmm.split(':')
+    const hour = dayjs(updateTimeHHmm).hour()
+    const minute = dayjs(updateTimeHHmm).minute()
     const updatetime = dayjs().isoWeekday(updateWeekday).hour(Number(hour)).minute(Number(minute))
     const offest = isCurrentWeekdayUpdateTimePassed(dayjs().format('YYYY-MM-DD HH:mm'))
         ? currentEpisode

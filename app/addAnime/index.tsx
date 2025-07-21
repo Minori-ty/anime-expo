@@ -26,10 +26,7 @@ export default function Index() {
                 currentEpisode,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: getFirstEpisodeTimestamp({
-                    ...data,
-                    updateTimeHHmm: dayjs(data.updateTimeHHmm).format('HH:mm'),
-                }),
+                firstEpisodeTimestamp: getFirstEpisodeTimestamp(data),
             })
         } else if (data.status === EStatus.completed) {
             const { firstEpisodeYYYYMMDDHHmm } = data
