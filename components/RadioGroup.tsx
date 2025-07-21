@@ -1,6 +1,8 @@
 import { themeColor } from '@/styles'
+import { cn } from '@/utils/nativewind'
+import { type ClassValue } from 'clsx'
 import React from 'react'
-import { StyleSheet, Text, TextStyle, TouchableOpacity, View, ViewStyle } from 'react-native'
+import { Text, TextStyle, TouchableOpacity, View, ViewStyle } from 'react-native'
 
 /**
  * 单个 RadioItem 的属性
@@ -13,31 +15,20 @@ export interface RadioItemProps<T extends string | number> {
     size?: number
     color?: string
     labelStyle?: TextStyle
+    className?: ClassValue
 }
 
 export function RadioItem<T extends string | number>(props: RadioItemProps<T>) {
     const { label, value, selected, onPress, size = 20, color = '#fb7299', labelStyle } = props
     return (
         <TouchableOpacity
-            style={styles.container}
+            className="my-1 flex-row items-center"
             onPress={() => onPress(value)}
             activeOpacity={0.7}
             accessibilityRole="radio"
             accessibilityState={{ selected }}
         >
-            <View
-                style={[
-                    styles.radio,
-                    {
-                        borderColor: color,
-                        width: size,
-                        height: size,
-                        borderRadius: size / 2,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    },
-                ]}
-            >
+            <View className={cn('mr-2 h-6 w-6 items-center justify-center rounded-xl border-2 border-[#409eff]')}>
                 {selected ? (
                     <View
                         style={[
@@ -51,7 +42,7 @@ export function RadioItem<T extends string | number>(props: RadioItemProps<T>) {
                     />
                 ) : null}
             </View>
-            <Text style={[styles.label, labelStyle]}>{label}</Text>
+            <Text className={cn('text-lg text-[#222]', props.className)}>{label}</Text>
         </TouchableOpacity>
     )
 }
@@ -74,6 +65,7 @@ export interface RadioGroupProps<T extends string | number> {
     color?: string
     labelStyle?: TextStyle
     style?: ViewStyle
+    className?: ClassValue
 }
 
 /**
@@ -81,9 +73,9 @@ export interface RadioGroupProps<T extends string | number> {
  * 支持 options 自动类型推断
  */
 export function RadioGroup<T extends string | number>(props: RadioGroupProps<T>) {
-    const { options, value, onChange, size = 20, color = themeColor, labelStyle, style } = props
+    const { options, value, onChange, size = 20, color = themeColor, labelStyle } = props
     return (
-        <View style={[{ flexDirection: 'row', gap: 20 }, style]}>
+        <View className={cn('flex-row justify-center gap-5', props.className)}>
             {options.map((opt, index) => (
                 <RadioItem
                     key={index}
@@ -99,14 +91,3 @@ export function RadioGroup<T extends string | number>(props: RadioGroupProps<T>)
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    container: { flexDirection: 'row', alignItems: 'center', marginVertical: 4 },
-    radio: {
-        borderWidth: 2,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 8,
-    },
-    label: { fontSize: 16, color: '#222' },
-})

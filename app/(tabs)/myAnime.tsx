@@ -68,7 +68,7 @@ export default function MyAnime() {
     })
     return (
         <ModalContext.Provider value={{ modalVisible, setModalVisible, animeData, setAnimeData }}>
-            <SafeAreaView edges={['top']}>
+            <SafeAreaView edges={['top']} className="flex-1 bg-white">
                 <PageHeader
                     title="动漫追番"
                     actions={[

@@ -15,8 +15,6 @@ export const animeTable = sqliteTable('anime', {
         .default(sql`(unixepoch())`),
     /** unix时间戳 */
     firstEpisodeTimestamp: integer('first_episode_timestamp').notNull(),
-    /** unix时间戳 */
-    lastEpisodeTimestamp: integer('last_episode_timestamp').notNull(),
 })
 
 /** 动漫更新表数据表 */
@@ -49,7 +47,6 @@ export const insertAnimeSchema = createInsertSchema(animeTable, {
     currentEpisode: schema => schema.int().gte(0),
     createdAt: schema => schema.int().gte(0),
     firstEpisodeTimestamp: schema => schema.int().gte(0),
-    lastEpisodeTimestamp: schema => schema.int().gte(0),
 })
 
 export const selectAnimeSchema = createSelectSchema(animeTable)

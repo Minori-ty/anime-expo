@@ -1,16 +1,19 @@
-import { type IDatePickerRef } from '@/components/Datepicker'
+import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
 import { EStatus, EWeekday } from '@/enums'
 import type { ToZodType } from '@/types'
 import { cn } from '@/utils/nativewind'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Picker } from '@react-native-picker/picker'
 import dayjs from 'dayjs'
 import { useNavigation } from 'expo-router'
-import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
-import { Controller, FieldError, useForm } from 'react-hook-form'
-import { Text, TextInput, View } from 'react-native'
+import React, { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react'
+import { Controller, FieldError, FieldErrors, useForm } from 'react-hook-form'
+import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import type { DeepExpand } from 'types-tools'
 import { z, ZodIssueCode, ZodTypeAny } from 'zod'
+import { RadioGroup } from './RadioGroup'
+import { IconSymbol } from './ui/IconSymbol'
 
 interface IBaseFormData {
     name: string
@@ -24,19 +27,26 @@ interface ISerializingExtera {
     updateWeekday: typeof EWeekday.valueType
     currentEpisode: number
 }
-type TSerializingForm = DeepExpand<IBaseFormData> & DeepExpand<ISerializingExtera>
+export type TSerializingForm = DeepExpand<IBaseFormData> & DeepExpand<ISerializingExtera>
 
 type ICompletedExtera = {
     status: typeof EStatus.completed | typeof EStatus.toBeUpdated
     firstEpisodeYYYYMMDDHHmm: string
 }
 
-type ICompletedForm = DeepExpand<IBaseFormData> & DeepExpand<ICompletedExtera>
+export type TCompletedForm = DeepExpand<IBaseFormData> & DeepExpand<ICompletedExtera>
 
-export type TFormData = DeepExpand<TSerializingForm> | DeepExpand<ICompletedForm>
+export type TFormData = DeepExpand<TSerializingForm> | DeepExpand<TCompletedForm>
+function isSerializingErrors(errors: FieldErrors<TFormData>): errors is FieldErrors<TSerializingForm> {
+    return '' in errors
+}
+function isCompletedErrors(errors: FieldErrors<TFormData>): errors is FieldErrors<TCompletedForm> {
+    return 'firstEpisodeYYYYMMDDHHmm' in errors
+}
 export interface IBaseAnimeFormProps {
-    formData: TSerializingForm | ICompletedForm
     onSubmit: (data: TFormData) => void
+    formData: TFormData
+    createDefaultValues: (status: typeof EStatus.valueType) => TFormData
 }
 export interface IBaseAnimeFormRef {
     onSubmit: (data: TFormData) => Promise<TFormData>
@@ -56,7 +66,7 @@ function createSchema(status: typeof EStatus.valueType): ZodTypeAny {
         dynamicFields = {
             updateWeekday: z.coerce.number().int().min(1, '请选择更新周').max(7, '更新周必须在1-7之间'),
             currentEpisode: z.coerce.number().min(1, '当前集数至少为1'),
-            status: z.coerce.number().int().min(2).max(2),
+            status: z.coerce.number().int(),
         }
         return baseScheme.extend(dynamicFields).superRefine((val, ctx) => {
             if (val.currentEpisode > val.totalEpisode) {
@@ -70,7 +80,7 @@ function createSchema(status: typeof EStatus.valueType): ZodTypeAny {
     } else if (status === EStatus.completed) {
         dynamicFields = {
             firstEpisodeYYYYMMDDHHmm: z.string(),
-            status: z.coerce.number().int().min(2).max(2),
+            status: z.coerce.number().int(),
         } satisfies ToZodType<ICompletedExtera>
         return baseScheme.extend(dynamicFields).superRefine((val, ctx) => {
             const { totalEpisode, firstEpisodeYYYYMMDDHHmm } = val
@@ -115,7 +125,7 @@ function createSchema(status: typeof EStatus.valueType): ZodTypeAny {
     return baseScheme
 }
 
-export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormProps) {
+export default function BaseForm({ formData, onSubmit: submit, createDefaultValues }: IBaseAnimeFormProps) {
     const navigation = useNavigation()
     useEffect(() => {
         navigation.setOptions({
@@ -123,10 +133,18 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
             headerTitleAlign: 'center',
         })
     }, [navigation])
+
     const [status, setStatus] = useState(formData.status)
+    const defaultValues = useMemo(() => {
+        const defaultValue = createDefaultValues(status)
+
+        return defaultValue
+    }, [status, createDefaultValues])
     useEffect(() => {
         setStatus(formData.status)
     }, [formData])
+
+    const options = EStatus.toSelect()
 
     const formSchema = createSchema(status)
     const datepickerRef = useRef<IDatePickerRef>(null)
@@ -138,12 +156,16 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         reset,
     } = useForm<TFormData>({
         resolver: zodResolver(formSchema),
-        defaultValues: formData,
+        defaultValues: defaultValues,
     })
 
+    useEffect(() => {
+        reset(createDefaultValues(status))
+    }, [reset, status, createDefaultValues])
+
     const onSubmit = async (data: TFormData) => {
-        submit(data)
-        return data
+        // submit(data)
+        console.log(1, data)
     }
     return (
         <KeyboardAwareScrollView bottomOffset={100} showsVerticalScrollIndicator={false} className="bg-white px-4 pt-5">
@@ -155,7 +177,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                         <TextInput
                             {...field}
                             className={cn(
-                                'h-10 rounded-md border border-white p-0 pl-2 pt-1 text-center text-base leading-7',
+                                'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
                                 errors.name && 'border-red-500'
                             )}
                             placeholder="请输入番剧名称"
@@ -165,6 +187,179 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     )}
                 />
             </FormItem>
+            <FormItem label="番剧名称" error={errors.status}>
+                <Controller
+                    control={control}
+                    name="status"
+                    render={({ field }) => (
+                        <RadioGroup
+                            {...field}
+                            options={options}
+                            value={field.value}
+                            onChange={(val: typeof EStatus.valueType) => {
+                                field.onChange(val)
+                                setStatus(val)
+                            }}
+                        />
+                    )}
+                />
+            </FormItem>
+            {status !== EStatus.serializing && (
+                <FormItem
+                    label="首播时间"
+                    error={isCompletedErrors(errors) ? errors.firstEpisodeYYYYMMDDHHmm : undefined}
+                >
+                    <Controller
+                        control={control}
+                        name="firstEpisodeYYYYMMDDHHmm"
+                        render={({ field }) => (
+                            <TouchableOpacity
+                                activeOpacity={0.5}
+                                className={cn(
+                                    'border-1 h-10 flex-row items-center rounded-md border-[#ccc] pl-3',
+                                    isCompletedErrors(errors) && errors.firstEpisodeYYYYMMDDHHmm && 'border-red-500'
+                                )}
+                                onPress={() => datepickerRef.current?.open()}
+                            >
+                                <IconSymbol size={20} name="calendar" color={'#1f1f1f'} />
+                                <Text className="ml-3 text-lg">{field.value}</Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                </FormItem>
+            )}
+            {status === EStatus.serializing && (
+                <FormItem label="更新周" error={isSerializingErrors(errors) ? errors.updateWeekday : undefined}>
+                    <Controller
+                        control={control}
+                        name="updateWeekday"
+                        render={({ field }) => (
+                            <Picker
+                                {...field}
+                                selectedValue={field.value}
+                                className={cn('border-1')}
+                                onValueChange={field.onChange}
+                            >
+                                {EWeekday.toMenu().map(item => {
+                                    return <Picker.Item key={item.key} label={item.label} value={item.key} />
+                                })}
+                            </Picker>
+                        )}
+                    />
+                </FormItem>
+            )}
+            {status === EStatus.serializing && (
+                <FormItem
+                    label="更新时间(HH:mm)"
+                    error={isSerializingErrors(errors) ? errors.updateTimeHHmm : undefined}
+                >
+                    <Controller
+                        control={control}
+                        name="updateTimeHHmm"
+                        render={({ field }) => (
+                            <TouchableOpacity
+                                activeOpacity={0.5}
+                                className={cn(
+                                    'border-1 h-10 flex-row items-center rounded-md border-[#ccc] pl-3',
+                                    isSerializingErrors(errors) && errors.updateTimeHHmm && 'border-red-500'
+                                )}
+                                onPress={() => datepickerRef.current?.open()}
+                            >
+                                <IconSymbol size={20} name="calendar" color={'#1f1f1f'} />
+                                <Text className="ml-3 text-lg">{dayjs(field.value).format('HH:mm')}</Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                </FormItem>
+            )}
+            {status === EStatus.serializing && (
+                <FormItem label="当前更新集数" error={isSerializingErrors(errors) ? errors.currentEpisode : undefined}>
+                    <Controller
+                        control={control}
+                        name="currentEpisode"
+                        render={({ field }) => (
+                            <TextInput
+                                {...field}
+                                className={cn(
+                                    'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                                    isSerializingErrors(errors) && errors.currentEpisode && 'border-red-500'
+                                )}
+                                placeholder="请输入当前更新集数"
+                                onChangeText={text => field.onChange(parseInt(text) || 0)}
+                                keyboardType="numeric"
+                                value={field.value?.toString() || ''}
+                            />
+                        )}
+                    />
+                </FormItem>
+            )}
+            <FormItem label="总集数" error={errors.totalEpisode}>
+                <Controller
+                    control={control}
+                    name="totalEpisode"
+                    render={({ field }) => (
+                        <TextInput
+                            {...field}
+                            className={cn(
+                                'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                                errors.totalEpisode && 'border-red-500'
+                            )}
+                            placeholder="请输入总集数"
+                            onChangeText={text => field.onChange(parseInt(text) || 0)}
+                            keyboardType="numeric"
+                            value={field.value?.toString() || ''}
+                        />
+                    )}
+                />
+            </FormItem>
+            <FormItem label="封面URL" error={errors.cover}>
+                <Controller
+                    control={control}
+                    name="cover"
+                    render={({ field }) => (
+                        <TextInput
+                            {...field}
+                            className={cn(
+                                'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                                errors.cover && 'border-red-500'
+                            )}
+                            placeholder="请输入封面图片URL"
+                            onChangeText={field.onChange}
+                            value={field.value}
+                        />
+                    )}
+                />
+            </FormItem>
+            <View className="mb-10">
+                <Button title="提交" onPress={handleSubmit(onSubmit)} />
+            </View>
+            <Controller
+                control={control}
+                name="firstEpisodeYYYYMMDDHHmm"
+                render={({ field }) => (
+                    <DatePicker
+                        ref={datepickerRef}
+                        date={field.value}
+                        onChange={date => {
+                            field.onChange(dayjs(date).format('YYYY-MM-DD HH:mm'))
+                        }}
+                    />
+                )}
+            />
+            <Controller
+                control={control}
+                name="updateTimeHHmm"
+                render={({ field }) => (
+                    <DatePicker
+                        ref={timepickerRef}
+                        date={field.value}
+                        hideHeader={true}
+                        onChange={date => {
+                            field.onChange(dayjs(date).format('YYYY-MM-DD HH:mm'))
+                        }}
+                    />
+                )}
+            />
         </KeyboardAwareScrollView>
     )
 }
@@ -172,7 +367,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
 function FormItem({ children, label, error }: PropsWithChildren<{ label: string; error: FieldError | undefined }>) {
     return (
         <View className="mb-4">
-            <Text className="mb-2 text-xs font-medium">{label}</Text>
+            <Text className="mb-2 text-lg font-medium">{label}</Text>
             {children}
             {error && <ErrorMessage error={error} />}
         </View>
@@ -180,5 +375,5 @@ function FormItem({ children, label, error }: PropsWithChildren<{ label: string;
 }
 
 function ErrorMessage({ error }: { error: FieldError | undefined }) {
-    return error?.message ? <Text className="mt-1 text-xl text-red-500">{error.message}</Text> : <></>
+    return error?.message ? <Text className="mt-1 text-base text-red-500">{error.message}</Text> : <></>
 }
