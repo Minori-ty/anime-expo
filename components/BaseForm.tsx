@@ -1,12 +1,11 @@
 import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
 import { EStatus, EWeekday } from '@/enums'
-import type { ToZodType } from '@/types'
 import { cn } from '@/utils/nativewind'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Picker } from '@react-native-picker/picker'
 import dayjs from 'dayjs'
 import { useNavigation } from 'expo-router'
-import React, { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react'
+import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
 import { Controller, FieldError, FieldErrors, useForm } from 'react-hook-form'
 import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
@@ -38,7 +37,7 @@ export type TCompletedForm = DeepExpand<IBaseFormData> & DeepExpand<ICompletedEx
 
 export type TFormData = DeepExpand<TSerializingForm> | DeepExpand<TCompletedForm>
 function isSerializingErrors(errors: FieldErrors<TFormData>): errors is FieldErrors<TSerializingForm> {
-    return '' in errors
+    return 'currentEpisode' in errors
 }
 function isCompletedErrors(errors: FieldErrors<TFormData>): errors is FieldErrors<TCompletedForm> {
     return 'firstEpisodeYYYYMMDDHHmm' in errors
@@ -46,7 +45,6 @@ function isCompletedErrors(errors: FieldErrors<TFormData>): errors is FieldError
 export interface IBaseAnimeFormProps {
     onSubmit: (data: TFormData) => void
     formData: TFormData
-    createDefaultValues: (status: typeof EStatus.valueType) => TFormData
 }
 export interface IBaseAnimeFormRef {
     onSubmit: (data: TFormData) => Promise<TFormData>
@@ -61,12 +59,12 @@ const baseScheme = z.object({
 })
 
 function createSchema(status: typeof EStatus.valueType): ZodTypeAny {
-    let dynamicFields: ToZodType<ICompletedExtera> | ToZodType<ISerializingExtera>
+    let dynamicFields
     if (status === EStatus.serializing) {
         dynamicFields = {
             updateWeekday: z.coerce.number().int().min(1, '请选择更新周').max(7, '更新周必须在1-7之间'),
             currentEpisode: z.coerce.number().min(1, '当前集数至少为1'),
-            status: z.coerce.number().int(),
+            status: z.number(),
         }
         return baseScheme.extend(dynamicFields).superRefine((val, ctx) => {
             if (val.currentEpisode > val.totalEpisode) {
@@ -80,8 +78,8 @@ function createSchema(status: typeof EStatus.valueType): ZodTypeAny {
     } else if (status === EStatus.completed) {
         dynamicFields = {
             firstEpisodeYYYYMMDDHHmm: z.string(),
-            status: z.coerce.number().int(),
-        } satisfies ToZodType<ICompletedExtera>
+            status: z.number(),
+        }
         return baseScheme.extend(dynamicFields).superRefine((val, ctx) => {
             const { totalEpisode, firstEpisodeYYYYMMDDHHmm } = val
             const firstEpisodeDateTimeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
@@ -107,8 +105,8 @@ function createSchema(status: typeof EStatus.valueType): ZodTypeAny {
     } else if (status === EStatus.toBeUpdated) {
         dynamicFields = {
             firstEpisodeYYYYMMDDHHmm: z.string(),
-            status: z.coerce.number().int().min(2).max(2),
-        } satisfies ToZodType<ICompletedExtera>
+            status: z.number(),
+        }
         return baseScheme.extend(dynamicFields).superRefine((val, ctx) => {
             const { firstEpisodeYYYYMMDDHHmm } = val
             const firstEpisodeDateTimeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
@@ -125,7 +123,7 @@ function createSchema(status: typeof EStatus.valueType): ZodTypeAny {
     return baseScheme
 }
 
-export default function BaseForm({ formData, onSubmit: submit, createDefaultValues }: IBaseAnimeFormProps) {
+export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormProps) {
     const navigation = useNavigation()
     useEffect(() => {
         navigation.setOptions({
@@ -135,11 +133,7 @@ export default function BaseForm({ formData, onSubmit: submit, createDefaultValu
     }, [navigation])
 
     const [status, setStatus] = useState(formData.status)
-    const defaultValues = useMemo(() => {
-        const defaultValue = createDefaultValues(status)
 
-        return defaultValue
-    }, [status, createDefaultValues])
     useEffect(() => {
         setStatus(formData.status)
     }, [formData])
@@ -156,16 +150,11 @@ export default function BaseForm({ formData, onSubmit: submit, createDefaultValu
         reset,
     } = useForm<TFormData>({
         resolver: zodResolver(formSchema),
-        defaultValues: defaultValues,
+        defaultValues: formData,
     })
 
-    useEffect(() => {
-        reset(createDefaultValues(status))
-    }, [reset, status, createDefaultValues])
-
     const onSubmit = async (data: TFormData) => {
-        // submit(data)
-        console.log(1, data)
+        submit(data)
     }
     return (
         <KeyboardAwareScrollView bottomOffset={100} showsVerticalScrollIndicator={false} className="bg-white px-4 pt-5">
@@ -216,7 +205,7 @@ export default function BaseForm({ formData, onSubmit: submit, createDefaultValu
                             <TouchableOpacity
                                 activeOpacity={0.5}
                                 className={cn(
-                                    'border-1 h-10 flex-row items-center rounded-md border-[#ccc] pl-3',
+                                    'h-10 flex-row items-center rounded-md border-1 border-[#ccc] pl-3',
                                     isCompletedErrors(errors) && errors.firstEpisodeYYYYMMDDHHmm && 'border-red-500'
                                 )}
                                 onPress={() => datepickerRef.current?.open()}
@@ -260,7 +249,7 @@ export default function BaseForm({ formData, onSubmit: submit, createDefaultValu
                             <TouchableOpacity
                                 activeOpacity={0.5}
                                 className={cn(
-                                    'border-1 h-10 flex-row items-center rounded-md border-[#ccc] pl-3',
+                                    'h-10 flex-row items-center rounded-md border-1 border-[#ccc] pl-3',
                                     isSerializingErrors(errors) && errors.updateTimeHHmm && 'border-red-500'
                                 )}
                                 onPress={() => datepickerRef.current?.open()}

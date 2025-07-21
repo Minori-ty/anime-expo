@@ -1,6 +1,6 @@
 import { addAnime } from '@/api'
-import BaseAnimeForm, { TFormData, type TCompletedForm, type TSerializingForm } from '@/components/BaseForm'
-import { EStatus } from '@/enums'
+import BaseAnimeForm, { TFormData } from '@/components/BaseForm'
+import { EStatus, EWeekday } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
 import { useMutation } from '@tanstack/react-query'
@@ -26,7 +26,10 @@ export default function Index() {
                 currentEpisode,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: getFirstEpisodeTimestamp(data),
+                firstEpisodeTimestamp: getFirstEpisodeTimestamp({
+                    ...data,
+                    updateTimeHHmm: dayjs(data.updateTimeHHmm).format('HH:mm'),
+                }),
             })
         } else if (data.status === EStatus.completed) {
             const { firstEpisodeYYYYMMDDHHmm } = data
@@ -57,36 +60,16 @@ export default function Index() {
         },
     })
 
-    function createDefaultValues(
-        status: typeof EStatus.valueType = EStatus.serializing
-    ): TSerializingForm | TCompletedForm {
-        if (status === EStatus.serializing) {
-            return {
-                name: '',
-                updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-                totalEpisode: 0,
-                status: status,
-                cover: '-',
-                currentEpisode: 0,
-                updateWeekday: 1,
-            }
-        } else {
-            return {
-                name: '',
-                updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-                totalEpisode: 0,
-                status: status,
-                cover: '-',
-                firstEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-            }
-        }
+    const formData = {
+        name: 'asf',
+        updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
+        totalEpisode: 5,
+        status: EStatus.serializing,
+        cover: 'https://pics4.baidu.com/feed/77094b36acaf2edd67093ad9d7fb12f938019305.jpeg@f_auto?token=dd785ba4307a2c24b9b4c58105475fd4',
+        currentEpisode: 3,
+        updateWeekday: EWeekday.monday,
+        firstEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
     }
 
-    return (
-        <BaseAnimeForm
-            formData={createDefaultValues(EStatus.serializing)}
-            onSubmit={onSubmit}
-            createDefaultValues={createDefaultValues}
-        />
-    )
+    return <BaseAnimeForm formData={formData} onSubmit={onSubmit} />
 }

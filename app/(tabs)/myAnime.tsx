@@ -11,7 +11,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import React, { createContext, useContext, useState } from 'react'
-import { FlatList, Pressable, Text, TouchableOpacity, View } from 'react-native'
+import { Dimensions, FlatList, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface ModalContextValue {
@@ -80,20 +80,26 @@ export default function MyAnime() {
                 {list.length > 0 ? <AnimeContainer list={list} /> : <Empty />}
             </SafeAreaView>
             <CustomModal visible={modalVisible} onClose={() => setModalVisible(false)}>
-                <View pointerEvents="box-none">
+                <View pointerEvents="box-none" className="w-80 rounded-3xl bg-white px-5 pb-9 pt-8">
                     <View>
-                        <Text>确认删除</Text>
-                        <Text>你确定要删除 &quot;{animeData.name}&quot; 吗？</Text>
+                        <Text className="mb-4 text-xl">确认删除</Text>
+                        <Text className="text-sm">你确定要删除 &quot;{animeData.name}&quot; 吗？</Text>
                     </View>
-                    <View>
-                        <View>
-                            <Pressable onPress={() => setModalVisible(false)}>
-                                <Text>取消</Text>
+                    <View className="mt-5 flex-row justify-end">
+                        <View className="">
+                            <Pressable
+                                onPress={() => setModalVisible(false)}
+                                className="h-7 w-16 items-center justify-center"
+                            >
+                                <Text className="text-sm text-[#6c5ce7]">取消</Text>
                             </Pressable>
                         </View>
                         <View>
-                            <Pressable onPress={() => deleteAnimeMutation()}>
-                                <Text>删除</Text>
+                            <Pressable
+                                onPress={() => deleteAnimeMutation()}
+                                className="h-7 w-16 items-center justify-center"
+                            >
+                                <Text className="text-sm text-[#6c5ce7]">删除</Text>
                             </Pressable>
                         </View>
                     </View>
@@ -150,14 +156,16 @@ function AnimeContainerItem({ data }: IAnimeContainerItemProps) {
                 })
             }}
             delayLongPress={300}
+            style={{ width: (Dimensions.get('window').width - GAP * 4) / 3 }}
         >
-            <View>
+            <View className="flex-1 overflow-hidden rounded-lg bg-sky-300">
                 <Image
                     source={data.cover}
                     placeholder={{ blurhash }}
                     contentFit="cover"
                     transition={1000}
                     cachePolicy={'memory-disk'}
+                    style={styles.image}
                 />
                 <UpdateLabel status={data.status} />
             </View>
@@ -173,12 +181,17 @@ interface IUpdateLabelProps {
 function UpdateLabel({ status }: IUpdateLabelProps) {
     return (
         <View
-            className={cn(
-                'absolute bottom-0 left-0 h-6 items-center justify-center px-2',
-                `bg-[${EStatus.raw(status).color}]`
-            )}
+            className={cn('absolute bottom-0 left-0 h-8 items-center justify-center px-2')}
+            style={{ backgroundColor: EStatus.raw(status).color }}
         >
-            <Text className="text-white">{EStatus.raw(status).label}</Text>
+            <Text className="truncate text-white">{EStatus.raw(status).label}</Text>
         </View>
     )
 }
+
+const styles = StyleSheet.create({
+    image: {
+        width: (Dimensions.get('window').width - GAP * 4) / 3,
+        height: ((Dimensions.get('window').width - GAP * 4) / 3) * 1.5,
+    },
+})

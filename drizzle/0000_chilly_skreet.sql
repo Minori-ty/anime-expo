@@ -5,8 +5,7 @@ CREATE TABLE `anime` (
 	`total_episode` integer NOT NULL,
 	`cover` text NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL,
-	`first_episode_timestamp` integer NOT NULL,
-	`last_episode_timestamp` integer NOT NULL
+	`first_episode_timestamp` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `calendar` (

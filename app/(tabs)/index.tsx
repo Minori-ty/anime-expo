@@ -57,7 +57,7 @@ export default function Index() {
     })
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1">
+        <SafeAreaView edges={['top']} className="flex-1 bg-white">
             <scheduleContext.Provider value={{ list }}>
                 <TabView
                     navigationState={{ index, routes }}
@@ -83,7 +83,6 @@ export default function Index() {
 function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.valueType }) {
     const { list } = useSchedule()
     const animeList = list.filter(item => dayjs(item.firstEpisodeYYYYMMDDHHmm).isoWeekday() === updateWeekday)
-    console.log(animeList)
 
     if (animeList.length === 0) {
         return <Empty />
@@ -122,24 +121,25 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
     const router = useRouter()
 
     return (
-        <View>
-            <View>
+        <View className="my-1 flex-row">
+            <View className="w-16 items-center justify-start">
                 <Text>{time}</Text>
             </View>
-            <View>
+            <View className="flex-1">
                 {animeList.map(item => {
                     return (
                         <TouchableOpacity key={item.id}>
-                            <View>
+                            <View className="mb-3 h-28 flex-1 flex-row">
                                 <Image
                                     source={item.cover}
                                     placeholder={{ blurhash }}
                                     contentFit="cover"
                                     transition={1000}
                                     cachePolicy={'memory-disk'}
+                                    className="mr-3 h-28 w-16 rounded-md"
                                 />
-                                <View>
-                                    <Text>{item.name}</Text>
+                                <View className="flex-1">
+                                    <Text className="font-black">{item.name}</Text>
                                     <EpisodeTip
                                         currentEpisode={item.currentEpisode}
                                         firstEpisodeYYYYMMDDHHmm={item.firstEpisodeYYYYMMDDHHmm}

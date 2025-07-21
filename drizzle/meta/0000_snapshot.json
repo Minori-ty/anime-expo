@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "1db3168e-e00b-43b9-a1c0-15a50d994d3c",
+  "id": "0f607c5e-a624-4433-a6a2-d8bdeef2aaa2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "anime": {
@@ -52,13 +52,6 @@
         },
         "first_episode_timestamp": {
           "name": "first_episode_timestamp",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "last_episode_timestamp": {
-          "name": "last_episode_timestamp",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
