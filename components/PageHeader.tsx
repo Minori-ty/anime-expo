@@ -8,7 +8,7 @@ interface IProps {
 
 function PageHeader({ title, actions }: IProps) {
     return (
-        <View className="h-14 flex-row items-center justify-between px-10">
+        <View className="h-14 flex-row items-center justify-between px-3">
             <Text className="text-2xl font-bold">{title}</Text>
             {actions &&
                 actions.map((item, index) => {
