@@ -16,7 +16,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import * as Notifications from 'expo-notifications'
-import { startTransition } from 'react'
+import { useEffect } from 'react'
 import { Text } from 'react-native'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -39,12 +39,12 @@ export default function RootLayout() {
     })
     useDrizzleStudio(expo)
 
-    startTransition(() => {
+    useEffect(() => {
         getNotificationPermission()
         getCalendarPermission()
         registerBackgroundTask()
         refreshScheduleAndCalendar()
-    })
+    }, [])
 
     function errorHandler(error: Error, stackTrace: string) {
         console.log(error)
