@@ -37,6 +37,15 @@ export default function Index() {
                 cover,
                 firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
             })
+        } else if (data.status === EStatus.toBeUpdated) {
+            const { firstEpisodeYYYYMMDDHHmm } = data
+            addAnimeMution({
+                name,
+                currentEpisode: 0,
+                totalEpisode,
+                cover,
+                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
+            })
         }
     }
 

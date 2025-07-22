@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { animeTable, calendarTable, scheduleTable, upcomingTable } from '@/db/schema'
-import { EStatus } from '@/enums'
+import { EStatus, EWeekday } from '@/enums'
 import { TTx } from '@/types'
 import { createCalendarEvent, deleteCalendarEvent } from '@/utils/calendar'
 import { getMondayTimestampInThisWeek, getStatus, getSundayTimestampInThisWeek } from '@/utils/time'
@@ -15,7 +15,7 @@ export async function getAnime() {
 
     return list.map(item => {
         const { id, name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = item
-        const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday()
+        const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
         const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
         const lastEpisodeTimestamp = dayjs
             .unix(firstEpisodeTimestamp)
@@ -46,7 +46,7 @@ export async function getAnimeById(id: number) {
     }
     const anime = list[0]
     const { name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = anime
-    const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday()
+    const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
     const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
     const lastEpisodeTimestamp = dayjs
         .unix(firstEpisodeTimestamp)
@@ -105,13 +105,61 @@ export async function updateAnime(data: IUpdateAnime) {
             .unix(firstEpisodeTimestamp)
             .add(totalEpisode * 7, 'day')
             .unix()
-        const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
+        const newStatus = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
         const anime = await getAnimeById(id)
         if (!anime) {
             console.log('此id的动漫不存在')
             return false
         }
-        if (status === EStatus.completed) {
+        const oldStatus = getStatus(
+            dayjs(anime.firstEpisodeYYYYMMDDHHmm).unix(),
+            dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix()
+        )
+        await tx
+            .update(animeTable)
+            .set({
+                name,
+                cover,
+                totalEpisode,
+                currentEpisode,
+                firstEpisodeTimestamp,
+                createdAt: dayjs().unix(),
+            })
+            .where(eq(animeTable.id, data.id))
+        if (oldStatus === EStatus.completed) {
+            if (newStatus === EStatus.completed) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
+            if (newStatus === EStatus.serializing) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
+            if (newStatus === EStatus.toBeUpdated) {
+                await addToBeUpdatedIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
+        }
+        if (oldStatus === EStatus.serializing) {
+            await deleteScheduleByAnimeId(tx, data.id)
+            if (newStatus === EStatus.completed) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
+            if (newStatus === EStatus.serializing) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
+            if (newStatus === EStatus.toBeUpdated) {
+                await addToBeUpdatedIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
+        }
+        if (oldStatus === EStatus.toBeUpdated) {
+            await deleteToBeUpdatedByAnimeId(tx, data.id)
+            if (newStatus === EStatus.completed) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
+            if (newStatus === EStatus.serializing) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
+            if (newStatus === EStatus.toBeUpdated) {
+                await addToBeUpdatedIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
+            }
         }
     })
 }
@@ -129,7 +177,7 @@ export async function getSchedule() {
         .filter(item => item !== null)
         .map(item => {
             const { id, name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = item
-            const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday()
+            const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
             const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
             const lastEpisodeTimestamp = dayjs
                 .unix(firstEpisodeTimestamp)
@@ -172,29 +220,40 @@ export async function deleteCalendarByAnimeId(tx: TTx, animeId: number): Promise
     return true
 }
 
+interface IAddScheduleIfNeed {
+    firstEpisodeTimestamp: number
+    totalEpisode: number
+    name: string
+    currentEpisode: number
+}
+
 /**
- * 如果需要，就添加更新表数据
+ * 如果需要，就添加更新表数据，并且创建日历事件
  * @param tx
+ * @param animeId
  * @param data
+ * @returns
  */
-export async function addScheduleIfNeed(tx: TTx, animeId: number, data: IInsertAnimeData) {
+export async function addScheduleIfNeed(tx: TTx, animeId: number, data: IAddScheduleIfNeed) {
     const { firstEpisodeTimestamp, totalEpisode, name, currentEpisode } = data
     const lastEpisodeTimestamp = dayjs
         .unix(firstEpisodeTimestamp)
         .add(totalEpisode * 7, 'day')
         .unix()
     const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
-    // 如果是完结，则不插入
     if (status === EStatus.completed) {
+        // 如果是完结，但是在本周内完结的，则可以插入到表中
         if (lastEpisodeTimestamp >= getMondayTimestampInThisWeek()) {
             await tx.insert(scheduleTable).values({
                 animeId,
             })
+            console.log('虽然已经完结，但是在本周内完结的，插入到表更新表中')
         }
         return
     }
     // 如果即将更新的时间不在本周，则不插入
     if (status === EStatus.toBeUpdated && firstEpisodeTimestamp > getSundayTimestampInThisWeek()) {
+        console.log('即将更新的时间不在本周，不插入')
         return
     }
     await tx.insert(scheduleTable).values({
@@ -208,14 +267,30 @@ export async function addScheduleIfNeed(tx: TTx, animeId: number, data: IInsertA
     })
 }
 
+async function deleteScheduleByAnimeId(tx: TTx, animeId: number) {
+    await tx.delete(scheduleTable).where(eq(scheduleTable.animeId, animeId))
+    const result = await tx.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
+    if (result.length === 0) {
+        console.log('没有关联的日历事件表')
+        return
+    }
+    await deleteCalendarByAnimeId(tx, animeId)
+}
+
+interface IAddToBeUpdatedIfNeed {
+    firstEpisodeTimestamp: number
+    totalEpisode: number
+    name: string
+    currentEpisode: number
+}
 /**
  * 如果需要，就添加到即将更新的表中
  * @param tx
  * @param animeId
  * @param data
  */
-export async function addToBeUpdatedIfNeed(tx: TTx, animeId: number, data: IInsertAnimeData) {
-    const { firstEpisodeTimestamp, totalEpisode } = data
+export async function addToBeUpdatedIfNeed(tx: TTx, animeId: number, data: IAddToBeUpdatedIfNeed) {
+    const { firstEpisodeTimestamp, totalEpisode, name, currentEpisode } = data
     const lastEpisodeTimestamp = dayjs
         .unix(firstEpisodeTimestamp)
         .add(totalEpisode * 7, 'day')
@@ -225,5 +300,22 @@ export async function addToBeUpdatedIfNeed(tx: TTx, animeId: number, data: IInse
         await tx.insert(upcomingTable).values({
             animeId,
         })
+
+        await createCalendarEvent({
+            name,
+            currentEpisode,
+            totalEpisode,
+            firstEpisodeTimestamp,
+        })
     }
+}
+
+export async function deleteToBeUpdatedByAnimeId(tx: TTx, animeId: number) {
+    await tx.delete(upcomingTable).where(eq(upcomingTable.animeId, animeId))
+    const result = await tx.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
+    if (result.length === 0) {
+        console.log('没有关联的日历事件表')
+        return
+    }
+    await deleteCalendarByAnimeId(tx, animeId)
 }

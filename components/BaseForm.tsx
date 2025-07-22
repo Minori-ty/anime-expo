@@ -44,7 +44,16 @@ function isCompletedErrors(errors: FieldErrors<TFormData>): errors is FieldError
 }
 export interface IBaseAnimeFormProps {
     onSubmit: (data: TFormData) => void
-    formData: TFormData
+    formData: {
+        name: string
+        updateTimeHHmm: string
+        totalEpisode: number
+        status: typeof EStatus.valueType
+        cover: string
+        currentEpisode: number
+        updateWeekday: typeof EWeekday.valueType
+        firstEpisodeYYYYMMDDHHmm: string
+    }
 }
 export interface IBaseAnimeFormRef {
     onSubmit: (data: TFormData) => Promise<TFormData>
@@ -205,7 +214,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             <TouchableOpacity
                                 activeOpacity={0.5}
                                 className={cn(
-                                    'h-10 flex-row items-center rounded-md border-1 border-[#ccc] pl-3',
+                                    'border-1 h-10 flex-row items-center rounded-md border-[#ccc] pl-3',
                                     isCompletedErrors(errors) && errors.firstEpisodeYYYYMMDDHHmm && 'border-red-500'
                                 )}
                                 onPress={() => datepickerRef.current?.open()}
@@ -249,7 +258,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             <TouchableOpacity
                                 activeOpacity={0.5}
                                 className={cn(
-                                    'h-10 flex-row items-center rounded-md border-1 border-[#ccc] pl-3',
+                                    'border-1 h-10 flex-row items-center rounded-md border-[#ccc] pl-3',
                                     isSerializingErrors(errors) && errors.updateTimeHHmm && 'border-red-500'
                                 )}
                                 onPress={() => datepickerRef.current?.open()}

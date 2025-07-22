@@ -96,6 +96,7 @@ export async function createCalendarEvent({
                 occurrence: totalEpisode - currentEpisode,
             },
         })
+        console.log('创建日历成功')
         return eventId
     } catch (error) {
         alert(error)
