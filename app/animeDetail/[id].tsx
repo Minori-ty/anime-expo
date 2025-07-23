@@ -10,73 +10,23 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
-import React, { useLayoutEffect, useMemo } from 'react'
+import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import DateTimePicker, { CalendarComponents, CalendarDay, DateType, useDefaultStyles } from 'react-native-ui-datepicker'
 
-// export default function AnimeDetail() {
-//     const { id } = useLocalSearchParams<{ id: string }>()
-//     const navigation = useNavigation()
-//     const router = useRouter()
+const animeDetailContext = createContext<IAnimeDetailContext | null>(null)
 
-//     const {
-//         data: anime = {
-//             firstEpisodeDateTime: '-',
-//             lastEpisodeDateTime: '-',
-//             createdAt: '-',
-//             id: -1,
-//             name: '-',
-//             updateWeekday: EWeekday.monday,
-//             updateTimeHHmm: '-',
-//             currentEpisode: 0,
-//             totalEpisode: 0,
-//             status: EStatus.serializing,
-//             cover: '-',
-//         },
-//     } = useQuery({
-//         queryKey: ['anime-detail'],
-//         queryFn: () => {},
-//     })
+const useAnimeDetailContext = () => {
+    const ctx = useContext(animeDetailContext)
+    if (!ctx) throw new Error('缺少provider')
+    return ctx
+}
 
-//     useLayoutEffect(() => {
-//         navigation.setOptions({
-//             headerTitle: '动漫详情',
-//             headerTitleAlign: 'center',
-//             headerRight: () => {
-//                 return (
-//                     <TouchableOpacity onPress={() => router.push(`/editAnime/${anime.id}`)}>
-//                         <IconSymbol size={28} name="text.append" color={'black'} />
-//                     </TouchableOpacity>
-//                 )
-//             },
-//         })
-//     }, [navigation, , anime.id, router])
-//     return (
-//         <SafeAreaView className="flex-1 bg-white">
-//             <ScrollView className="pb-5">
-//                 <View className="h-64 w-full overflow-hidden">
-//                     <Image
-//                         source={{ uri: anime.cover }}
-//                         style={styles.cover}
-//                         contentFit="cover"
-//                         placeholder={{ blurhash }}
-//                     />
-//                 </View>
-
-//                 <View>
-
-//                 </View>
-//             </ScrollView>
-//         </SafeAreaView>
-//     )
-// }
-
-// const styles = StyleSheet.create({
-//     cover: {
-//         width: '100%',
-//         height: '100%',
-//     },
-// })
-
+interface IAnimeDetailContext {
+    firstEpisodeYYYYMMDDHHmm: string
+    currentEpisode: number
+    totalEpisode: number
+}
 function AnimeDetail() {
     const { id } = useLocalSearchParams<{ id: string }>()
     const navigation = useNavigation()
@@ -100,6 +50,10 @@ function AnimeDetail() {
         queryKey: ['anime-detail', id],
         queryFn: () => getAnimeById(Number(id)),
     })
+    const [date, setDate] = useState<DateType>(anime.firstEpisodeYYYYMMDDHHmm && dayjs().format('YYYY-MM-DD HH:mm'))
+    useEffect(() => {
+        setDate(anime.firstEpisodeYYYYMMDDHHmm)
+    }, [isLoading, anime])
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -118,7 +72,7 @@ function AnimeDetail() {
     const progress = useMemo(() => {
         return Math.round((anime.currentEpisode / anime.totalEpisode) * 100)
     }, [anime.currentEpisode, anime.totalEpisode])
-
+    const defaultStyles = useDefaultStyles()
     if (isLoading || !anime) {
         return <Loading />
     }
@@ -137,121 +91,143 @@ function AnimeDetail() {
             textColor: 'text-orange-900',
         },
     }
+    const components: CalendarComponents = {
+        Day: (day: CalendarDay) => <Day day={day} />,
+    }
     return (
-        <View className="flex-1 bg-gray-50">
+        <View className="flex-1 bg-red-50">
             {/* Header */}
-
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                {/* Cover Image Section */}
-                <View className="bg-white">
-                    <View className="flex-row p-6">
-                        {/* Cover Image */}
-                        <View className="mr-4">
-                            <Image
-                                source={anime.cover}
-                                placeholder={{ blurhash }}
-                                contentFit="cover"
-                                transition={1000}
-                                cachePolicy={'memory-disk'}
-                                style={styles.cover}
-                            />
-                            {/* Status Badge */}
-                            <View
-                                className={cn(
-                                    `absolute -right-2 -top-2 rounded-full px-2 py-1`,
-                                    mapColor[anime.status].bgColor
-                                )}
-                            >
-                                <Text className={cn(`text-xs font-medium`, mapColor[anime.status].textColor)}>
-                                    {EStatus.raw(anime.status).label}
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* Basic Info */}
-                        <View className="flex-1">
-                            <Text className="mb-3 text-xl font-bold leading-6 text-gray-900">{anime.name}</Text>
-
-                            {/* Progress Info */}
-                            <View className="mb-4">
-                                <View className="mb-2 flex-row items-center justify-between">
-                                    <Text className="text-sm text-gray-600">更新进度</Text>
-                                    <Text className="text-sm font-medium text-blue-600">
-                                        {anime.currentEpisode} / {anime.totalEpisode} 集
+                <animeDetailContext.Provider
+                    value={{
+                        firstEpisodeYYYYMMDDHHmm: anime.firstEpisodeYYYYMMDDHHmm,
+                        currentEpisode: anime.currentEpisode,
+                        totalEpisode: anime.totalEpisode,
+                    }}
+                >
+                    {/* Cover Image Section */}
+                    <View className="bg-white">
+                        <View className="flex-row p-6">
+                            {/* Cover Image */}
+                            <View className="mr-4">
+                                <Image
+                                    source={anime.cover}
+                                    placeholder={{ blurhash }}
+                                    contentFit="cover"
+                                    transition={1000}
+                                    cachePolicy={'memory-disk'}
+                                    style={styles.cover}
+                                />
+                                {/* Status Badge */}
+                                <View
+                                    className={cn(
+                                        `absolute -right-2 -top-2 rounded-full px-2 py-1`,
+                                        mapColor[anime.status].bgColor
+                                    )}
+                                >
+                                    <Text className={cn(`text-xs font-medium`, mapColor[anime.status].textColor)}>
+                                        {EStatus.raw(anime.status).label}
                                     </Text>
                                 </View>
-                                <View className="h-2 overflow-hidden rounded-full bg-gray-200">
-                                    <View
-                                        className="h-full rounded-full bg-blue-500"
-                                        style={{ width: `${progress}%` }}
-                                    />
-                                </View>
-                                <Text className="mt-1 text-xs text-gray-500">完成度 {progress}%</Text>
                             </View>
 
-                            {/* Quick Stats */}
-                            <View className="flex-row justify-between">
-                                <View className="items-center">
-                                    <Text className="text-lg font-bold text-blue-600">{anime.totalEpisode}</Text>
-                                    <Text className="text-xs text-gray-500">总集数</Text>
+                            {/* Basic Info */}
+                            <View className="flex-1">
+                                <Text className="mb-3 text-xl font-bold leading-6 text-gray-900">{anime.name}</Text>
+
+                                {/* Progress Info */}
+                                <View className="mb-4">
+                                    <View className="mb-2 flex-row items-center justify-between">
+                                        <Text className="text-sm text-gray-600">更新进度</Text>
+                                        <Text className="text-sm font-medium text-blue-600">
+                                            {anime.currentEpisode} / {anime.totalEpisode} 集
+                                        </Text>
+                                    </View>
+                                    <View className="h-2 overflow-hidden rounded-full bg-gray-200">
+                                        <View
+                                            className="h-full rounded-full bg-blue-500"
+                                            style={{ width: `${progress}%` }}
+                                        />
+                                    </View>
+                                    <Text className="mt-1 text-xs text-gray-500">完成度 {progress}%</Text>
                                 </View>
-                                <View className="items-center">
-                                    <Text className="text-lg font-bold text-green-600">{anime.currentEpisode}</Text>
-                                    <Text className="text-xs text-gray-500">已更新</Text>
-                                </View>
-                                <View className="items-center">
-                                    <Text className="text-lg font-bold text-orange-600">
-                                        {EWeekday.raw(anime.updateWeekday).label}
-                                    </Text>
-                                    <Text className="text-xs text-gray-500">更新日</Text>
+
+                                {/* Quick Stats */}
+                                <View className="flex-row justify-between">
+                                    <View className="items-center">
+                                        <Text className="text-lg font-bold text-blue-600">{anime.totalEpisode}</Text>
+                                        <Text className="text-xs text-gray-500">总集数</Text>
+                                    </View>
+                                    <View className="items-center">
+                                        <Text className="text-lg font-bold text-green-600">{anime.currentEpisode}</Text>
+                                        <Text className="text-xs text-gray-500">已更新</Text>
+                                    </View>
+                                    <View className="items-center">
+                                        <Text className="text-lg font-bold text-orange-600">
+                                            {EWeekday.raw(anime.updateWeekday).label}
+                                        </Text>
+                                        <Text className="text-xs text-gray-500">更新日</Text>
+                                    </View>
                                 </View>
                             </View>
                         </View>
                     </View>
-                </View>
 
-                {/* Update Schedule */}
-                <View className="mt-2 bg-white p-6">
-                    <Text className="mb-4 text-lg font-semibold text-gray-900">更新时间表</Text>
+                    {/* Update Schedule */}
+                    <View className="mt-2 bg-white p-6">
+                        <Text className="mb-4 text-lg font-semibold text-gray-900">更新时间表</Text>
 
-                    <View className="space-y-4">
-                        <View className="flex-row items-center rounded-xl bg-blue-50 px-4 py-3">
-                            <View className="mr-3 size-8 items-center justify-center rounded-full bg-blue-500">
-                                <Text className="text-sm text-white">📅</Text>
+                        <View className="space-y-4">
+                            <View className="flex-row items-center rounded-xl bg-blue-50 px-4 py-3">
+                                <View className="mr-3 size-8 items-center justify-center rounded-full bg-blue-500">
+                                    <Text className="text-sm text-white">📅</Text>
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="font-medium text-gray-900">每周更新</Text>
+                                    <Text className="text-sm text-gray-600">
+                                        {EWeekday.raw(anime.updateWeekday).label}{' '}
+                                        {dayjs(anime.updateTimeHHmm).format('HH:mm')}
+                                    </Text>
+                                </View>
                             </View>
-                            <View className="flex-1">
-                                <Text className="font-medium text-gray-900">每周更新</Text>
-                                <Text className="text-sm text-gray-600">
-                                    {EWeekday.raw(anime.updateWeekday).label}{' '}
-                                    {dayjs(anime.updateTimeHHmm).format('HH:mm')}
-                                </Text>
-                            </View>
-                        </View>
 
-                        <View className="my-3 flex-row items-center rounded-xl bg-green-50 px-4 py-3">
-                            <View className="mr-3 size-8 items-center justify-center rounded-full bg-green-500">
-                                <Text className="text-sm text-white">🎬</Text>
+                            <View className="my-3 flex-row items-center rounded-xl bg-green-50 px-4 py-3">
+                                <View className="mr-3 size-8 items-center justify-center rounded-full bg-green-500">
+                                    <Text className="text-sm text-white">🎬</Text>
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="font-medium text-gray-900">首播时间</Text>
+                                    <Text className="text-sm text-gray-600">{anime.firstEpisodeYYYYMMDDHHmm}</Text>
+                                </View>
                             </View>
-                            <View className="flex-1">
-                                <Text className="font-medium text-gray-900">首播时间</Text>
-                                <Text className="text-sm text-gray-600">{anime.firstEpisodeYYYYMMDDHHmm}</Text>
-                            </View>
-                        </View>
 
-                        <View className="flex-row items-center rounded-xl bg-orange-50 px-4 py-3">
-                            <View className="mr-3 size-8 items-center justify-center rounded-full bg-orange-500">
-                                <Text className="text-sm text-white">🆕</Text>
-                            </View>
-                            <View className="flex-1">
-                                <Text className="font-medium text-gray-900">结局时间</Text>
-                                <Text className="text-sm text-gray-600">{anime.lastEpisodeYYYYMMDDHHmm}</Text>
+                            <View className="flex-row items-center rounded-xl bg-orange-50 px-4 py-3">
+                                <View className="mr-3 size-8 items-center justify-center rounded-full bg-orange-500">
+                                    <Text className="text-sm text-white">🆕</Text>
+                                </View>
+                                <View className="flex-1">
+                                    <Text className="font-medium text-gray-900">结局时间</Text>
+                                    <Text className="text-sm text-gray-600">{anime.lastEpisodeYYYYMMDDHHmm}</Text>
+                                </View>
                             </View>
                         </View>
                     </View>
-                </View>
 
-                {/* Bottom Spacing */}
-                <View className="h-8" />
+                    <View className="mt-2 bg-white p-6">
+                        <DateTimePicker
+                            styles={defaultStyles}
+                            mode="single"
+                            date={date}
+                            onChange={day => setDate(day.date)}
+                            firstDayOfWeek={1}
+                            multiRangeMode
+                            showOutsideDays
+                            timePicker
+                            locale="zh"
+                            components={components}
+                        />
+                    </View>
+                </animeDetailContext.Provider>
             </ScrollView>
         </View>
     )
@@ -259,10 +235,70 @@ function AnimeDetail() {
 
 export default AnimeDetail
 
+function Day({ day }: { day: CalendarDay }) {
+    const { isSelected } = day
+    console.log(day.date)
+    const { totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm } = useAnimeDetailContext()
+    return (
+        <View className="items-center">
+            <Text className={cn('font-archivo text-foreground', isSelected && 'text-white')}>{day.text}</Text>
+            {checkEpisodeUpdate({ date: day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm }) && (
+                <Text
+                    style={styles.episodeText}
+                    className={cn('font-archivo text-foreground absolute -bottom-2', isSelected && 'text-white')}
+                >
+                    {checkEpisodeUpdate({ date: day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm })}
+                </Text>
+            )}
+        </View>
+    )
+}
+
+interface ICheckEpisodeUpdate {
+    firstEpisodeYYYYMMDDHHmm: string
+    currentEpisode: number
+    totalEpisode: number
+    date: string
+}
+function checkEpisodeUpdate({
+    date,
+    firstEpisodeYYYYMMDDHHmm,
+    currentEpisode,
+    totalEpisode,
+}: ICheckEpisodeUpdate): string {
+    // 使用Day.js解析输入日期
+    const inputDate = dayjs(date)
+
+    // 使用Day.js解析第一集日期（保持输入格式的灵活性）
+    const firstDate = dayjs(firstEpisodeYYYYMMDDHHmm)
+
+    // 计算输入日期与第一集日期之间的周数差（向下取整）
+    const weeksDiff = Math.floor(inputDate.diff(firstDate, 'day') / 7)
+
+    // 如果输入日期早于第一集或已超过总集数，返回空字符串
+    if (inputDate.isBefore(firstDate) || weeksDiff + 1 > totalEpisode) {
+        return ''
+    }
+
+    // 计算理论上的更新日期（第一集日期 + 周数差 * 7天）
+    const theoreticalUpdateDate = firstDate.add(weeksDiff * 7, 'day')
+
+    // 如果输入日期与理论更新日期相同，则为更新日
+    if (inputDate.isSame(theoreticalUpdateDate, 'day')) {
+        return `第${weeksDiff + 1}集`
+    }
+
+    // 非更新日返回空字符串
+    return ''
+}
+
 const styles = StyleSheet.create({
     cover: {
         width: 128,
         height: 192,
         borderRadius: 12,
+    },
+    episodeText: {
+        fontSize: 6,
     },
 })

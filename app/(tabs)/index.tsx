@@ -1,14 +1,15 @@
-import { getAnime, getSchedule } from '@/api'
+import { getSchedule } from '@/api'
 import Empty from '@/components/lottie/Empty'
 import { EWeekday } from '@/enums'
 import { blurhash } from '@/styles'
-import { TAnimeList } from '@/types'
+import type { TAnimeList } from '@/types'
 import { isCurrentWeekdayUpdateTimePassed } from '@/utils/time'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import utc from 'dayjs/plugin/utc'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import React, { createContext, useContext, useState } from 'react'
@@ -19,9 +20,10 @@ import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
 dayjs.extend(customParseFormat)
 dayjs.extend(isSameOrBefore)
 dayjs.extend(isoWeek)
+dayjs.extend(utc)
 
 interface IScheduleContext {
-    list: Awaited<ReturnType<typeof getAnime>>
+    list: TAnimeList
 }
 
 const scheduleContext = createContext<IScheduleContext | null>(null)
