@@ -1,12 +1,13 @@
-// import { IconSymbol } from '@/components/ui/IconSymbol'
-// import { EStatus, EWeekday } from '@/enums'
-// import { blurhash } from '@/styles'
-// import { useQuery } from '@tanstack/react-query'
-// import 'dayjs/locale/zh-cn'
-// import { Image } from 'expo-image'
-// import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
-// import React, { useLayoutEffect } from 'react'
-// import { SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { getAnimeById } from '@/api'
+import Loading from '@/components/lottie/Loading'
+import { IconSymbol } from '@/components/ui/IconSymbol'
+import { EStatus, EWeekday } from '@/enums'
+import { useQuery } from '@tanstack/react-query'
+import 'dayjs/locale/zh-cn'
+import { Image } from 'expo-image'
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
+import React, { useLayoutEffect, useMemo } from 'react'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 // export default function AnimeDetail() {
 //     const { id } = useLocalSearchParams<{ id: string }>()
@@ -71,69 +72,52 @@
 //         height: '100%',
 //     },
 // })
-import React from 'react'
-import { Image, ScrollView, Text, View } from 'react-native'
 
-interface AnimeData {
-    id: number
-    name: string
-    currentEpisode: number
-    totalEpisode: number
-    cover: string
-    updateWeekday: 1 | 2 | 3 | 4 | 5 | 6 | 7
-    firstEpisodeYYYYMMDDHHmm: string
-    lastEpisodeYYYYMMDDHHmm: string
-    status: 1 | 2 | 3 // 1: 连载中, 2: 已完结, 3: 即将更新
-    updateTimeHHmm: string
-}
+function AnimeDetail() {
+    const { id } = useLocalSearchParams<{ id: string }>()
+    const navigation = useNavigation()
+    const router = useRouter()
 
-function AnimeInfoPage() {
-    // Sample data - replace with your actual data
-    const animeData: AnimeData = {
-        id: 1,
-        name: '进击的巨人 最终季',
-        currentEpisode: 12,
-        totalEpisode: 24,
-        cover: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=600&fit=crop',
-        updateWeekday: 7,
-        firstEpisodeYYYYMMDDHHmm: '202301011200',
-        lastEpisodeYYYYMMDDHHmm: '202312311200',
-        status: 1,
-        updateTimeHHmm: '1200',
+    const {
+        data: anime = {
+            id: -1,
+            name: '',
+            currentEpisode: 0,
+            totalEpisode: 0,
+            cover: '',
+            updateWeekday: EWeekday.monday,
+            firstEpisodeYYYYMMDDHHmm: '',
+            lastEpisodeYYYYMMDDHHmm: '',
+            status: EStatus.serializing,
+            updateTimeHHmm: '',
+        },
+        isLoading,
+    } = useQuery({
+        queryKey: ['anime-detail', id],
+        queryFn: () => getAnimeById(Number(id)),
+    })
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            headerTitle: '动漫详情',
+            headerTitleAlign: 'center',
+            headerRight: () => {
+                return (
+                    <TouchableOpacity onPress={() => router.push(`/editAnime/${anime.id}`)}>
+                        <IconSymbol size={28} name="text.append" color={'black'} />
+                    </TouchableOpacity>
+                )
+            },
+        })
+    }, [navigation, , anime.id, router])
+
+    const progress = useMemo(() => {
+        return Math.round((anime.currentEpisode / anime.totalEpisode) * 100)
+    }, [anime.currentEpisode, anime.totalEpisode])
+
+    if (isLoading || !anime) {
+        return <Loading />
     }
-
-    const getWeekdayText = (weekday: number) => {
-        const weekdays = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日']
-        return weekdays[weekday]
-    }
-
-    const getStatusInfo = (status: number) => {
-        const statusMap = {
-            1: { text: '连载中', color: 'bg-green-100', textColor: 'text-green-700' },
-            2: { text: '已完结', color: 'bg-gray-100', textColor: 'text-gray-700' },
-            3: { text: '即将更新', color: 'bg-blue-100', textColor: 'text-blue-700' },
-        }
-        return statusMap[status as keyof typeof statusMap]
-    }
-
-    const formatDateTime = (dateTimeStr: string) => {
-        const year = dateTimeStr.slice(0, 4)
-        const month = dateTimeStr.slice(4, 6)
-        const day = dateTimeStr.slice(6, 8)
-        const hour = dateTimeStr.slice(8, 10)
-        const minute = dateTimeStr.slice(10, 12)
-        return `${year}年${month}月${day}日 ${hour}:${minute}`
-    }
-
-    const formatTime = (timeStr: string) => {
-        const hour = timeStr.slice(0, 2)
-        const minute = timeStr.slice(2, 4)
-        return `${hour}:${minute}`
-    }
-
-    const statusInfo = getStatusInfo(animeData.status)
-    const progress = (animeData.currentEpisode / animeData.totalEpisode) * 100
-
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header */}
@@ -144,27 +128,25 @@ function AnimeInfoPage() {
                     <View className="flex-row p-6">
                         {/* Cover Image */}
                         <View className="mr-4">
-                            <Image
-                                source={{ uri: animeData.cover }}
-                                className="h-48 w-32 rounded-xl"
-                                resizeMode="cover"
-                            />
+                            <Image source={{ uri: anime.cover }} className="h-48 w-32 rounded-xl" />
                             {/* Status Badge */}
-                            <View className={`absolute -right-2 -top-2 rounded-full px-2 py-1 ${statusInfo.color}`}>
-                                <Text className={`text-xs font-medium ${statusInfo.textColor}`}>{statusInfo.text}</Text>
+                            <View
+                                className={`absolute -right-2 -top-2 rounded-full px-2 py-1 ${EStatus.raw(anime.status).color}`}
+                            >
+                                <Text className={`text-xs font-medium`}>{EStatus.raw(anime.status).label}</Text>
                             </View>
                         </View>
 
                         {/* Basic Info */}
                         <View className="flex-1">
-                            <Text className="mb-3 text-xl font-bold leading-6 text-gray-900">{animeData.name}</Text>
+                            <Text className="mb-3 text-xl font-bold leading-6 text-gray-900">{anime.name}</Text>
 
                             {/* Progress Info */}
                             <View className="mb-4">
                                 <View className="mb-2 flex-row items-center justify-between">
                                     <Text className="text-sm text-gray-600">更新进度</Text>
                                     <Text className="text-sm font-medium text-blue-600">
-                                        {animeData.currentEpisode} / {animeData.totalEpisode} 集
+                                        {anime.currentEpisode} / {anime.totalEpisode} 集
                                     </Text>
                                 </View>
                                 <View className="h-2 overflow-hidden rounded-full bg-gray-200">
@@ -173,22 +155,22 @@ function AnimeInfoPage() {
                                         style={{ width: `${progress}%` }}
                                     />
                                 </View>
-                                <Text className="mt-1 text-xs text-gray-500">完成度 {Math.round(progress)}%</Text>
+                                <Text className="mt-1 text-xs text-gray-500">完成度 {progress}%</Text>
                             </View>
 
                             {/* Quick Stats */}
                             <View className="flex-row justify-between">
                                 <View className="items-center">
-                                    <Text className="text-lg font-bold text-blue-600">{animeData.totalEpisode}</Text>
+                                    <Text className="text-lg font-bold text-blue-600">{anime.totalEpisode}</Text>
                                     <Text className="text-xs text-gray-500">总集数</Text>
                                 </View>
                                 <View className="items-center">
-                                    <Text className="text-lg font-bold text-green-600">{animeData.currentEpisode}</Text>
+                                    <Text className="text-lg font-bold text-green-600">{anime.currentEpisode}</Text>
                                     <Text className="text-xs text-gray-500">已更新</Text>
                                 </View>
                                 <View className="items-center">
                                     <Text className="text-lg font-bold text-orange-600">
-                                        {getWeekdayText(animeData.updateWeekday)}
+                                        {EWeekday.raw(anime.updateWeekday).label}
                                     </Text>
                                     <Text className="text-xs text-gray-500">更新日</Text>
                                 </View>
@@ -209,7 +191,7 @@ function AnimeInfoPage() {
                             <View className="flex-1">
                                 <Text className="font-medium text-gray-900">每周更新</Text>
                                 <Text className="text-sm text-gray-600">
-                                    {getWeekdayText(animeData.updateWeekday)} {formatTime(animeData.updateTimeHHmm)}
+                                    {EWeekday.raw(anime.updateWeekday).label} {anime.updateTimeHHmm}
                                 </Text>
                             </View>
                         </View>
@@ -220,9 +202,7 @@ function AnimeInfoPage() {
                             </View>
                             <View className="flex-1">
                                 <Text className="font-medium text-gray-900">首播时间</Text>
-                                <Text className="text-sm text-gray-600">
-                                    {formatDateTime(animeData.firstEpisodeYYYYMMDDHHmm)}
-                                </Text>
+                                <Text className="text-sm text-gray-600">{anime.firstEpisodeYYYYMMDDHHmm}</Text>
                             </View>
                         </View>
 
@@ -231,10 +211,8 @@ function AnimeInfoPage() {
                                 <Text className="text-sm text-white">🆕</Text>
                             </View>
                             <View className="flex-1">
-                                <Text className="font-medium text-gray-900">最新更新</Text>
-                                <Text className="text-sm text-gray-600">
-                                    {formatDateTime(animeData.lastEpisodeYYYYMMDDHHmm)}
-                                </Text>
+                                <Text className="font-medium text-gray-900">结局时间</Text>
+                                <Text className="text-sm text-gray-600">{anime.lastEpisodeYYYYMMDDHHmm}</Text>
                             </View>
                         </View>
                     </View>
@@ -247,4 +225,4 @@ function AnimeInfoPage() {
     )
 }
 
-export default AnimeInfoPage
+export default AnimeDetail

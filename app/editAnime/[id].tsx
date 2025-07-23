@@ -32,7 +32,7 @@ export default function EditAnime() {
     const { id } = useLocalSearchParams<{ id: string }>()
 
     const { data, isLoading } = useQuery({
-        queryKey: ['anime-edit'],
+        queryKey: ['anime-edit', id],
         queryFn: () => getAnimeById(Number(id)),
     })
     async function onSubmit(data: TFormData) {

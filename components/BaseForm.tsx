@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Picker } from '@react-native-picker/picker'
 import dayjs from 'dayjs'
 import { useNavigation } from 'expo-router'
-import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
+import React, { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react'
 import { Controller, FieldError, FieldErrors, useForm } from 'react-hook-form'
 import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
@@ -157,44 +157,23 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         control,
         handleSubmit,
         formState: { errors },
-        getValues,
+        watch,
     } = useForm<TFormData>({
         resolver: zodResolver(formSchema),
         defaultValues: formData,
     })
 
+    const [currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday] = watch([
+        'currentEpisode',
+        'totalEpisode',
+        'firstEpisodeYYYYMMDDHHmm',
+        'updateTimeHHmm',
+        'updateWeekday',
+    ])
     const onSubmit = async (data: TFormData) => {
         submit(data)
     }
-    /** 获取完结或未更新的动漫的最后一集时间 */
-    function getLastEpisodeDateTime(params: {
-        firstEpisodeYYYYMMDDHHmm: string
-        totalEpisode: number
-        status: typeof EStatus.completed | typeof EStatus.toBeUpdated
-    }): string
-    /** 获取连载中的动漫的最后一集时间 */
-    function getLastEpisodeDateTime(params: {
-        currentEpisode: number
-        updateTimeHHmm: string
-        updateWeekday: typeof EWeekday.valueType
-        totalEpisode: number
-        status: typeof EStatus.serializing
-    }): string
-    function getLastEpisodeDateTime({
-        firstEpisodeYYYYMMDDHHmm,
-        totalEpisode,
-        currentEpisode,
-        updateTimeHHmm,
-        status,
-        updateWeekday,
-    }: {
-        firstEpisodeYYYYMMDDHHmm?: string
-        currentEpisode?: number
-        updateTimeHHmm?: string
-        updateWeekday?: typeof EWeekday.valueType
-        totalEpisode: number
-        status: typeof EStatus.valueType
-    }): string {
+    const getLastEpisodeDateTime = useMemo(() => {
         if (status === EStatus.serializing) {
             if (currentEpisode && updateTimeHHmm && updateWeekday) {
                 return dayjs
@@ -215,8 +194,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     .format('YYYY-MM-DD HH:mm')
             }
         }
-        return '没有匹配到任何数据'
-    }
+    }, [status, currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday])
     return (
         <KeyboardAwareScrollView bottomOffset={100} showsVerticalScrollIndicator={false} className="bg-white px-4 pt-5">
             <FormItem label="番剧名称" error={errors.name}>
@@ -283,15 +261,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     <Controller
                         control={control}
                         name="firstEpisodeYYYYMMDDHHmm"
-                        render={({ field }) => (
-                            <Text className="text-lg">
-                                {getLastEpisodeDateTime({
-                                    status,
-                                    firstEpisodeYYYYMMDDHHmm: field.value,
-                                    totalEpisode: getValues().totalEpisode,
-                                })}
-                            </Text>
-                        )}
+                        render={({ field }) => <Text className="text-lg">{getLastEpisodeDateTime}</Text>}
                     />
                 </FormItem>
             )}
