@@ -95,7 +95,7 @@ function AnimeDetail() {
         Day: (day: CalendarDay) => <Day day={day} />,
     }
     return (
-        <View className="flex-1 bg-red-50">
+        <View className="flex-1 bg-gray-50">
             {/* Header */}
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 <animeDetailContext.Provider
@@ -236,16 +236,28 @@ function AnimeDetail() {
 export default AnimeDetail
 
 function Day({ day }: { day: CalendarDay }) {
-    const { isSelected } = day
-    console.log(day.date)
+    const { isSelected, isCurrentMonth } = day
+    console.log(isCurrentMonth)
     const { totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm } = useAnimeDetailContext()
     return (
         <View className="items-center">
-            <Text className={cn('font-archivo text-foreground', isSelected && 'text-white')}>{day.text}</Text>
+            <Text
+                className={cn(
+                    'font-archivo text-foreground',
+                    isSelected && 'text-white',
+                    !isCurrentMonth && 'text-gray-400'
+                )}
+            >
+                {day.text}
+            </Text>
             {checkEpisodeUpdate({ date: day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm }) && (
                 <Text
                     style={styles.episodeText}
-                    className={cn('font-archivo text-foreground absolute -bottom-2', isSelected && 'text-white')}
+                    className={cn(
+                        'font-archivo text-foreground absolute -bottom-2',
+                        isSelected && 'text-white',
+                        !isCurrentMonth && 'text-gray-400'
+                    )}
                 >
                     {checkEpisodeUpdate({ date: day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm })}
                 </Text>
