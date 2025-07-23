@@ -91,7 +91,7 @@ export default function MyAnime() {
                                 onPress={() => setModalVisible(false)}
                                 className="h-7 w-16 items-center justify-center"
                             >
-                                <Text className="text-sm text-[#6c5ce7]">取消</Text>
+                                <Text className="text-base text-[#6c5ce7]">取消</Text>
                             </Pressable>
                         </View>
                         <View>
@@ -99,7 +99,7 @@ export default function MyAnime() {
                                 onPress={() => deleteAnimeMutation()}
                                 className="h-7 w-16 items-center justify-center"
                             >
-                                <Text className="text-sm text-[#6c5ce7]">删除</Text>
+                                <Text className="text-base text-[#6c5ce7]">删除</Text>
                             </Pressable>
                         </View>
                     </View>
@@ -169,8 +169,10 @@ function AnimeContainerItem({ data }: IAnimeContainerItemProps) {
                 />
                 <UpdateLabel status={data.status} />
             </View>
-            <Text numberOfLines={1}>{data.name}</Text>
-            <Text>更新 第{data.currentEpisode}集</Text>
+            <Text numberOfLines={1} className="font-semibold">
+                {data.name}
+            </Text>
+            <Text className="mt-1 text-sm text-gray-500">更新 第{data.currentEpisode}集</Text>
         </Pressable>
     )
 }
@@ -181,7 +183,7 @@ interface IUpdateLabelProps {
 function UpdateLabel({ status }: IUpdateLabelProps) {
     return (
         <View
-            className={cn('absolute bottom-0 left-0 h-8 items-center justify-center px-2')}
+            className={cn('absolute bottom-0 left-0 h-8 items-center justify-center rounded-tr-lg px-2')}
             style={{ backgroundColor: EStatus.raw(status).color }}
         >
             <Text className="truncate text-white">{EStatus.raw(status).label}</Text>

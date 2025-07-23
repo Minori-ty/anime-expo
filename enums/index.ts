@@ -7,18 +7,24 @@ export const EStatus = Enum({
         value: 1,
         label: '已完结',
         color: '#f56c6c',
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-900',
     },
     /** 连载中 */
     serializing: {
         value: 2,
         label: '连载中',
         color: '#409eff',
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-900',
     },
     /** 即将更新 */
     toBeUpdated: {
         value: 3,
         label: '即将更新',
         color: '#FFD547',
+        bgColor: 'bg-orange-100',
+        textColor: 'text-orange-900',
     },
 } as const)
 

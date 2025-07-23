@@ -10,7 +10,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import { Image } from 'expo-image'
-import { useRouter } from 'expo-router'
+import { router } from 'expo-router'
 import React, { createContext, useContext, useState } from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -118,8 +118,6 @@ interface IAnimeCardItemProps {
 }
 
 function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
-    const router = useRouter()
-
     return (
         <View className="my-2 flex-row">
             <View className="w-16 items-center justify-start">
@@ -128,7 +126,11 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
             <View className="flex-1">
                 {animeList.map(item => {
                     return (
-                        <TouchableOpacity key={item.id} activeOpacity={0.5}>
+                        <TouchableOpacity
+                            key={item.id}
+                            activeOpacity={0.5}
+                            onPress={() => router.push(`/animeDetail/${item.id}`)}
+                        >
                             <View className="mb-3 h-28 flex-1 flex-row">
                                 <Image
                                     source={item.cover}

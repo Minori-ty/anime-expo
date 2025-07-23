@@ -81,6 +81,12 @@ export default function EditAnime() {
             queryClient.invalidateQueries({
                 queryKey: ['schedule'],
             })
+            queryClient.invalidateQueries({
+                queryKey: ['anime-detail', id],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['anime-edit', id],
+            })
 
             router.back()
         },

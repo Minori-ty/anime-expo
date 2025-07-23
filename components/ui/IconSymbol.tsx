@@ -22,6 +22,7 @@ const MAPPING = {
     'plus.app.fill': 'add',
     'text.append': 'edit-note',
     calendar: 'calendar-today',
+    'calendar.badge.plus': 'event-available',
     alarm: 'schedule',
     'arrow.down.and.line.horizontal.and.arrow.up': 'download',
     'arrow.up.doc.on.clipboard': 'upload',

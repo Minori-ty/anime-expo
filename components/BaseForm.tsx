@@ -173,26 +173,23 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
     const onSubmit = async (data: TFormData) => {
         submit(data)
     }
-    const getLastEpisodeDateTime = useMemo(() => {
+    const getLastEpisodeDateTime = useMemo<string>(() => {
+        if (totalEpisode <= 1) {
+            return '-'
+        }
         if (status === EStatus.serializing) {
-            if (currentEpisode && updateTimeHHmm && updateWeekday) {
-                return dayjs
-                    .unix(getFirstEpisodeTimestamp({ currentEpisode, updateTimeHHmm, updateWeekday }))
-                    .add(totalEpisode - 1, 'week')
-                    .format('YYYY-MM-DD HH:mm')
-            }
+            return dayjs
+                .unix(getFirstEpisodeTimestamp({ currentEpisode, updateTimeHHmm, updateWeekday }))
+                .add(totalEpisode - 1, 'week')
+                .format('YYYY-MM-DD HH:mm')
         } else if (status === EStatus.completed) {
-            if (firstEpisodeYYYYMMDDHHmm) {
-                return dayjs(firstEpisodeYYYYMMDDHHmm)
-                    .add(totalEpisode - 1, 'week')
-                    .format('YYYY-MM-DD HH:mm')
-            }
+            return dayjs(firstEpisodeYYYYMMDDHHmm)
+                .add(totalEpisode - 1, 'week')
+                .format('YYYY-MM-DD HH:mm')
         } else {
-            if (firstEpisodeYYYYMMDDHHmm) {
-                return dayjs(firstEpisodeYYYYMMDDHHmm)
-                    .add(totalEpisode - 1, 'week')
-                    .format('YYYY-MM-DD HH:mm')
-            }
+            return dayjs(firstEpisodeYYYYMMDDHHmm)
+                .add(totalEpisode - 1, 'week')
+                .format('YYYY-MM-DD HH:mm')
         }
     }, [status, currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday])
     return (

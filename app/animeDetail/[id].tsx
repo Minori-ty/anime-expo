@@ -2,12 +2,16 @@ import { getAnimeById } from '@/api'
 import Loading from '@/components/lottie/Loading'
 import { IconSymbol } from '@/components/ui/IconSymbol'
 import { EStatus, EWeekday } from '@/enums'
+import { blurhash } from '@/styles'
+import { cn } from '@/utils/nativewind'
 import { useQuery } from '@tanstack/react-query'
+import { type ClassValue } from 'clsx'
+import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import React, { useLayoutEffect, useMemo } from 'react'
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 // export default function AnimeDetail() {
 //     const { id } = useLocalSearchParams<{ id: string }>()
@@ -118,6 +122,21 @@ function AnimeDetail() {
     if (isLoading || !anime) {
         return <Loading />
     }
+
+    const mapColor: Record<typeof EStatus.valueType, { bgColor: ClassValue; textColor: ClassValue }> = {
+        [EStatus.completed]: {
+            bgColor: 'bg-red-100',
+            textColor: 'text-red-900',
+        },
+        [EStatus.serializing]: {
+            bgColor: 'bg-green-100',
+            textColor: 'text-green-900',
+        },
+        [EStatus.toBeUpdated]: {
+            bgColor: 'bg-orange-100',
+            textColor: 'text-orange-900',
+        },
+    }
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header */}
@@ -128,12 +147,24 @@ function AnimeDetail() {
                     <View className="flex-row p-6">
                         {/* Cover Image */}
                         <View className="mr-4">
-                            <Image source={{ uri: anime.cover }} className="h-48 w-32 rounded-xl" />
+                            <Image
+                                source={anime.cover}
+                                placeholder={{ blurhash }}
+                                contentFit="cover"
+                                transition={1000}
+                                cachePolicy={'memory-disk'}
+                                style={styles.cover}
+                            />
                             {/* Status Badge */}
                             <View
-                                className={`absolute -right-2 -top-2 rounded-full px-2 py-1 ${EStatus.raw(anime.status).color}`}
+                                className={cn(
+                                    `absolute -right-2 -top-2 rounded-full px-2 py-1`,
+                                    mapColor[anime.status].bgColor
+                                )}
                             >
-                                <Text className={`text-xs font-medium`}>{EStatus.raw(anime.status).label}</Text>
+                                <Text className={cn(`text-xs font-medium`, mapColor[anime.status].textColor)}>
+                                    {EStatus.raw(anime.status).label}
+                                </Text>
                             </View>
                         </View>
 
@@ -191,12 +222,13 @@ function AnimeDetail() {
                             <View className="flex-1">
                                 <Text className="font-medium text-gray-900">每周更新</Text>
                                 <Text className="text-sm text-gray-600">
-                                    {EWeekday.raw(anime.updateWeekday).label} {anime.updateTimeHHmm}
+                                    {EWeekday.raw(anime.updateWeekday).label}{' '}
+                                    {dayjs(anime.updateTimeHHmm).format('HH:mm')}
                                 </Text>
                             </View>
                         </View>
 
-                        <View className="flex-row items-center rounded-xl bg-green-50 px-4 py-3">
+                        <View className="my-3 flex-row items-center rounded-xl bg-green-50 px-4 py-3">
                             <View className="mr-3 size-8 items-center justify-center rounded-full bg-green-500">
                                 <Text className="text-sm text-white">🎬</Text>
                             </View>
@@ -226,3 +258,11 @@ function AnimeDetail() {
 }
 
 export default AnimeDetail
+
+const styles = StyleSheet.create({
+    cover: {
+        width: 128,
+        height: 192,
+        borderRadius: 12,
+    },
+})

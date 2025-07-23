@@ -134,6 +134,7 @@ export async function updateAnime(data: IUpdateAnime) {
                 await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
             }
             if (newStatus === EStatus.toBeUpdated) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
                 await addToBeUpdatedIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
             }
         }
@@ -146,11 +147,13 @@ export async function updateAnime(data: IUpdateAnime) {
                 await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
             }
             if (newStatus === EStatus.toBeUpdated) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
                 await addToBeUpdatedIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
             }
         }
         if (oldStatus === EStatus.toBeUpdated) {
             await deleteToBeUpdatedByAnimeId(tx, data.id)
+            await deleteScheduleByAnimeId(tx, data.id)
             if (newStatus === EStatus.completed) {
                 await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
             }
@@ -158,6 +161,7 @@ export async function updateAnime(data: IUpdateAnime) {
                 await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
             }
             if (newStatus === EStatus.toBeUpdated) {
+                await addScheduleIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
                 await addToBeUpdatedIfNeed(tx, data.id, { firstEpisodeTimestamp, totalEpisode, name, currentEpisode })
             }
         }
