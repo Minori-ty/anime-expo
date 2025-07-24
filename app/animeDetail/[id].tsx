@@ -254,7 +254,7 @@ function Day({ day }: { day: CalendarDay }) {
                 <Text
                     style={styles.episodeText}
                     className={cn(
-                        'font-archivo text-foreground absolute -bottom-2',
+                        'font-archivo text-foreground absolute -bottom-2 flex-1 items-center justify-center bg-sky-400',
                         isSelected && 'text-white',
                         !isCurrentMonth && 'text-gray-400'
                     )}
