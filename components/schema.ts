@@ -53,44 +53,54 @@ const formSchema = z
 
         if (val.status === EStatus.completed) {
             const { totalEpisode, firstEpisodeYYYYMMDDHHmm } = val
-            const firstEpisodeDateTimeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
-            if (firstEpisodeDateTimeTimestamp > dayjs().unix()) {
+            const firstEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
+
+            if (firstEpisodeTimestamp > dayjs().unix()) {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,
                     path: ['firstEpisodeYYYYMMDDHHmm'],
-                    message: '当前番剧还未播出，请设置正确的日期',
+                    message: '当前番剧还未播出，请选择即将更新状态',
                 })
             }
-            const lastEpisodeDateTimeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`)
+            const lastEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`)
                 .add((totalEpisode - 1) * 7, 'day')
                 .unix()
 
-            if (lastEpisodeDateTimeTimestamp > dayjs().unix()) {
+            if (lastEpisodeTimestamp > dayjs().unix()) {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,
                     path: ['firstEpisodeYYYYMMDDHHmm'],
-                    message: '当前番剧还未完结，请设置正确的日期',
+                    message: '当前番剧还未完结，请选择连载中状态',
                 })
             }
         }
 
         if (val.status === EStatus.toBeUpdated) {
-            const { firstEpisodeYYYYMMDDHHmm } = val
-            const firstEpisodeDateTimeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
-
-            if (firstEpisodeDateTimeTimestamp < dayjs().unix()) {
+            const { firstEpisodeYYYYMMDDHHmm, totalEpisode } = val
+            const firstEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
+            const lastEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`)
+                .add((totalEpisode - 1) * 7, 'day')
+                .unix()
+            if (firstEpisodeTimestamp < dayjs().unix() && lastEpisodeTimestamp > dayjs().unix()) {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,
                     path: ['firstEpisodeYYYYMMDDHHmm'],
-                    message: '当前番剧已开播，请设置正确的日期',
+                    message: '当前番剧连载中，请选择连载中状态',
+                })
+            }
+            if (lastEpisodeTimestamp < dayjs().unix()) {
+                ctx.addIssue({
+                    code: ZodIssueCode.custom,
+                    path: ['firstEpisodeYYYYMMDDHHmm'],
+                    message: '当前番剧已完结，请选择已完结状态',
                 })
             }
         }
     })
 
-type FormSchema = z.infer<typeof formSchema>
+type TFormSchema = z.infer<typeof formSchema>
 
-const formDefaultValues: FormSchema = {
+const formDefaultValues: TFormSchema = {
     name: 'asf',
     updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
     totalEpisode: 5,
@@ -100,4 +110,4 @@ const formDefaultValues: FormSchema = {
     updateWeekday: EWeekday.monday,
 }
 
-export { formDefaultValues, formSchema, FormSchema }
+export { formDefaultValues, formSchema, TFormSchema }

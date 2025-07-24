@@ -1,6 +1,6 @@
 import { addAnime } from '@/api'
 import BaseAnimeForm from '@/components/BaseForm'
-import { FormSchema } from '@/components/schema'
+import { TFormSchema } from '@/components/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
@@ -9,6 +9,17 @@ import dayjs from 'dayjs'
 import { router, useNavigation } from 'expo-router'
 import React, { useLayoutEffect } from 'react'
 import { SubmitHandler } from 'react-hook-form'
+
+const formData = {
+    name: 'asf',
+    updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
+    totalEpisode: 5,
+    status: EStatus.serializing,
+    cover: 'https://pics4.baidu.com/feed/77094b36acaf2edd67093ad9d7fb12f938019305.jpeg@f_auto?token=dd785ba4307a2c24b9b4c58105475fd4',
+    currentEpisode: 3,
+    updateWeekday: EWeekday.monday,
+    firstEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
+}
 
 export default function Index() {
     const navigation = useNavigation()
@@ -19,7 +30,7 @@ export default function Index() {
         })
     }, [navigation])
 
-    const onSubmit: SubmitHandler<FormSchema> = data => {
+    const onSubmit: SubmitHandler<TFormSchema> = data => {
         const { name, cover, totalEpisode } = data
         if (data.status === EStatus.serializing) {
             const { currentEpisode } = data
@@ -67,17 +78,6 @@ export default function Index() {
             alert(err)
         },
     })
-
-    const formData = {
-        name: 'asf',
-        updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-        totalEpisode: 5,
-        status: EStatus.serializing,
-        cover: 'https://pics4.baidu.com/feed/77094b36acaf2edd67093ad9d7fb12f938019305.jpeg@f_auto?token=dd785ba4307a2c24b9b4c58105475fd4',
-        currentEpisode: 3,
-        updateWeekday: EWeekday.monday,
-        firstEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-    }
 
     return <BaseAnimeForm formData={formData} onSubmit={onSubmit} />
 }

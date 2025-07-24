@@ -11,9 +11,8 @@ import { Controller, FieldError, FieldErrors, SubmitHandler, useForm, useWatch }
 import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import type { DeepExpand } from 'types-tools'
-import { z, ZodIssueCode, ZodTypeAny } from 'zod'
 import { RadioGroup } from './RadioGroup'
-import { FormSchema, formSchema } from './schema'
+import { TFormSchema, formSchema } from './schema'
 import { IconSymbol } from './ui/IconSymbol'
 
 interface IBaseFormData {
@@ -40,7 +39,7 @@ export type TCompletedForm = DeepExpand<IBaseFormData> & DeepExpand<ICompletedEx
 export type TFormData = DeepExpand<TSerializingForm> | DeepExpand<TCompletedForm>
 
 export interface IBaseAnimeFormProps {
-    onSubmit: SubmitHandler<FormSchema>
+    onSubmit: SubmitHandler<TFormSchema>
     formData: {
         name: string
         updateTimeHHmm: string
@@ -52,82 +51,6 @@ export interface IBaseAnimeFormProps {
         firstEpisodeYYYYMMDDHHmm: string
     }
 }
-export interface IBaseAnimeFormRef {
-    onSubmit: (data: TFormData) => Promise<TFormData>
-}
-
-const baseScheme = z.object({
-    name: z.string().min(1, '请输入番剧名称').max(20, '番剧名称长度不能超过20个字符'),
-    status: z.union([z.literal(EStatus.completed), z.literal(EStatus.serializing), z.literal(EStatus.toBeUpdated)]),
-    updateTimeHHmm: z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm'),
-    totalEpisode: z.coerce.number().min(1, '总集数至少为1'),
-    cover: z.string().url('请输入有效的URL'),
-})
-
-function createSchema(status: typeof EStatus.valueType): ZodTypeAny {
-    let dynamicFields
-    if (status === EStatus.serializing) {
-        dynamicFields = {
-            updateWeekday: z.coerce.number().int().min(1, '请选择更新周').max(7, '更新周必须在1-7之间'),
-            currentEpisode: z.coerce.number().min(1, '当前集数至少为1'),
-            status: z.number(),
-        }
-        return baseScheme.extend(dynamicFields).superRefine((val, ctx) => {
-            if (val.currentEpisode > val.totalEpisode) {
-                ctx.addIssue({
-                    code: ZodIssueCode.custom,
-                    path: ['currentEpisode'],
-                    message: '当前集数不能大于总集数',
-                })
-            }
-        })
-    } else if (status === EStatus.completed) {
-        dynamicFields = {
-            firstEpisodeYYYYMMDDHHmm: z.string(),
-            status: z.number(),
-        }
-        return baseScheme.extend(dynamicFields).superRefine((val, ctx) => {
-            const { totalEpisode, firstEpisodeYYYYMMDDHHmm } = val
-            const firstEpisodeDateTimeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
-            if (firstEpisodeDateTimeTimestamp > dayjs().unix()) {
-                ctx.addIssue({
-                    code: ZodIssueCode.custom,
-                    path: ['firstEpisodeYYYYMMDDHHmm'],
-                    message: '当前番剧还未播出，请设置正确的日期',
-                })
-            }
-            const lastEpisodeDateTimeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`)
-                .add((totalEpisode - 1) * 7, 'day')
-                .unix()
-
-            if (lastEpisodeDateTimeTimestamp > dayjs().unix()) {
-                ctx.addIssue({
-                    code: ZodIssueCode.custom,
-                    path: ['firstEpisodeYYYYMMDDHHmm'],
-                    message: '当前番剧还未完结，请设置正确的日期',
-                })
-            }
-        })
-    } else if (status === EStatus.toBeUpdated) {
-        dynamicFields = {
-            firstEpisodeYYYYMMDDHHmm: z.string(),
-            status: z.number(),
-        }
-        return baseScheme.extend(dynamicFields).superRefine((val, ctx) => {
-            const { firstEpisodeYYYYMMDDHHmm } = val
-            const firstEpisodeDateTimeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
-
-            if (firstEpisodeDateTimeTimestamp < dayjs().unix()) {
-                ctx.addIssue({
-                    code: ZodIssueCode.custom,
-                    path: ['firstEpisodeYYYYMMDDHHmm'],
-                    message: '当前番剧已开播，请设置正确的日期',
-                })
-            }
-        })
-    }
-    return baseScheme
-}
 
 export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormProps) {
     const navigation = useNavigation()
@@ -138,15 +61,8 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         })
     }, [navigation])
 
-    // const [status, setStatus] = useState(formData.status)
-
-    // useEffect(() => {
-    //     setStatus(formData.status)
-    // }, [formData])
-
     const options = EStatus.toSelect()
 
-    // const formSchema = createSchema(status)
     const datepickerRef = useRef<IDatePickerRef>(null)
     const timepickerRef = useRef<IDatePickerRef>(null)
     const {
@@ -154,7 +70,8 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         handleSubmit,
         formState: { errors },
         watch,
-    } = useForm<FormSchema>({
+        register,
+    } = useForm<TFormSchema>({
         mode: 'all',
         resolver: zodResolver(formSchema),
         defaultValues: formData,
@@ -162,7 +79,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
 
     const fullErrors: FieldErrors<
         Extract<
-            FormSchema,
+            TFormSchema,
             {
                 currentEpisode: number
                 updateWeekday: typeof EWeekday.valueType
@@ -172,7 +89,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
     > &
         FieldErrors<
             Extract<
-                FormSchema,
+                TFormSchema,
                 {
                     firstEpisodeYYYYMMDDHHmm: string
                 }
@@ -188,11 +105,11 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         'updateTimeHHmm',
         'updateWeekday',
     ])
-    const onSubmit: SubmitHandler<FormSchema> = async data => {
+    const onSubmit: SubmitHandler<TFormSchema> = async data => {
         submit(data)
     }
     const getLastEpisodeDateTime = useMemo<string>(() => {
-        if (totalEpisode <= 1) {
+        if (totalEpisode < 1) {
             return '-'
         }
         if (status === EStatus.serializing) {
@@ -255,7 +172,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             <TouchableOpacity
                                 activeOpacity={0.5}
                                 className={cn(
-                                    'h-10 flex-row items-center rounded-md border-1 border-[#ccc] pl-3',
+                                    'h-10 flex-row items-center rounded-md border border-[#ccc] pl-3',
                                     fullErrors.firstEpisodeYYYYMMDDHHmm && 'border-red-500'
                                 )}
                                 onPress={() => datepickerRef.current?.open()}
@@ -272,7 +189,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     <Controller
                         control={control}
                         name="firstEpisodeYYYYMMDDHHmm"
-                        render={({ field }) => <Text className="text-lg">{getLastEpisodeDateTime}</Text>}
+                        render={() => <Text className="text-lg">{getLastEpisodeDateTime}</Text>}
                     />
                 </FormItem>
             )}
@@ -286,7 +203,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             <Picker
                                 {...field}
                                 selectedValue={field.value}
-                                className={cn('border-1')}
+                                className={cn('border')}
                                 onValueChange={field.onChange}
                             >
                                 {EWeekday.toMenu().map(item => {
@@ -306,7 +223,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             <TouchableOpacity
                                 activeOpacity={0.5}
                                 className={cn(
-                                    'h-10 flex-row items-center rounded-md border-1 border-[#ccc] pl-3',
+                                    'h-10 flex-row items-center rounded-md border border-[#ccc] pl-3',
                                     fullErrors.updateTimeHHmm && 'border-red-500'
                                 )}
                                 onPress={() => timepickerRef.current?.open()}
@@ -320,7 +237,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
             )}
             {status === EStatus.serializing && (
                 <FormItem label="当前更新集数" error={fullErrors.currentEpisode}>
-                    <Controller
+                    {/* <Controller
                         control={control}
                         name="currentEpisode"
                         render={({ field }) => (
@@ -336,11 +253,22 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                 value={field.value?.toString() || ''}
                             />
                         )}
+                    /> */}
+                    <TextInput
+                        {...register('currentEpisode', {
+                            valueAsNumber: true,
+                        })}
+                        className={cn(
+                            'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                            fullErrors.currentEpisode && 'border-red-500'
+                        )}
+                        placeholder="请输入当前更新集数"
+                        keyboardType="numeric"
                     />
                 </FormItem>
             )}
             <FormItem label="总集数" error={fullErrors.totalEpisode}>
-                <Controller
+                {/* <Controller
                     control={control}
                     name="totalEpisode"
                     render={({ field }) => (
@@ -356,6 +284,17 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             value={field.value?.toString() || ''}
                         />
                     )}
+                /> */}
+                <TextInput
+                    {...register('totalEpisode', {
+                        valueAsNumber: true,
+                    })}
+                    className={cn(
+                        'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                        fullErrors.totalEpisode && 'border-red-500'
+                    )}
+                    placeholder="请输入总集数"
+                    keyboardType="numeric"
                 />
             </FormItem>
             <FormItem label="封面URL" error={fullErrors.cover}>

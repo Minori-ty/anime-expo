@@ -78,3 +78,14 @@ export function getFirstEpisodeTimestamp(data: IGetFirstEpisodeTimestamp) {
         : currentEpisode + 1
     return updatetime.subtract(offest - 1, 'week').unix()
 }
+
+interface IGetLastEpisodeTimestamp {
+    firstEpisodeTimestamp: number
+    totalEpisode: number
+}
+export function getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode }: IGetLastEpisodeTimestamp) {
+    return dayjs
+        .unix(firstEpisodeTimestamp)
+        .add(totalEpisode * 7, 'day')
+        .unix()
+}

@@ -1,6 +1,7 @@
 import { getAnimeById, updateAnime } from '@/api'
-import BaseAnimeForm, { TFormData } from '@/components/BaseForm'
+import BaseAnimeForm from '@/components/BaseForm'
 import Loading from '@/components/lottie/Loading'
+import { TFormSchema } from '@/components/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
@@ -8,6 +9,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect } from 'react'
+import { SubmitHandler } from 'react-hook-form'
 
 const formData = {
     name: 'asf',
@@ -35,9 +37,8 @@ export default function EditAnime() {
         queryKey: ['anime-edit', id],
         queryFn: () => getAnimeById(Number(id)),
     })
-    async function onSubmit(data: TFormData) {
-        console.log(data)
 
+    const onSubmit: SubmitHandler<TFormSchema> = data => {
         const { name, cover, totalEpisode } = data
         if (data.status === EStatus.serializing) {
             const { currentEpisode } = data
