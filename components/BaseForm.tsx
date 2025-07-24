@@ -2,6 +2,7 @@ import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
 import { EStatus, EWeekday } from '@/enums'
 import { cn } from '@/utils/nativewind'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
+import { DevTool } from '@hookform/devtools'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Picker } from '@react-native-picker/picker'
 import dayjs from 'dayjs'
@@ -345,6 +346,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     />
                 )}
             />
+            <DevTool control={control} placement="top-right" />
         </KeyboardAwareScrollView>
     )
 }
@@ -354,11 +356,7 @@ function FormItem({ children, label, error }: PropsWithChildren<{ label: string;
         <View className="mb-4">
             <Text className="mb-2 text-lg font-medium">{label}</Text>
             {children}
-            {error && <ErrorMessage error={error} />}
+            {error?.message ? <Text className="mt-1 text-base text-red-500">{error.message}</Text> : <></>}
         </View>
     )
-}
-
-function ErrorMessage({ error }: { error: FieldError | undefined }) {
-    return error?.message ? <Text className="mt-1 text-base text-red-500">{error.message}</Text> : <></>
 }
