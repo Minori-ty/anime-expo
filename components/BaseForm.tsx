@@ -2,7 +2,6 @@ import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
 import { EStatus, EWeekday } from '@/enums'
 import { cn } from '@/utils/nativewind'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
-import { DevTool } from '@hookform/devtools'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Picker } from '@react-native-picker/picker'
 import dayjs from 'dayjs'
@@ -71,7 +70,6 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         handleSubmit,
         formState: { errors },
         watch,
-        register,
     } = useForm<TFormSchema>({
         mode: 'all',
         resolver: zodResolver(formSchema),
@@ -238,7 +236,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
             )}
             {status === EStatus.serializing && (
                 <FormItem label="当前更新集数" error={fullErrors.currentEpisode}>
-                    {/* <Controller
+                    <Controller
                         control={control}
                         name="currentEpisode"
                         render={({ field }) => (
@@ -249,27 +247,22 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                     fullErrors.currentEpisode && 'border-red-500'
                                 )}
                                 placeholder="请输入当前更新集数"
-                                onChangeText={text => field.onChange(parseInt(text) || 0)}
+                                onChangeText={text => {
+                                    if (text === '') {
+                                        field.onChange(text)
+                                    } else {
+                                        field.onChange(parseInt(text))
+                                    }
+                                }}
                                 keyboardType="numeric"
                                 value={field.value?.toString() || ''}
                             />
                         )}
-                    /> */}
-                    <TextInput
-                        {...register('currentEpisode', {
-                            valueAsNumber: true,
-                        })}
-                        className={cn(
-                            'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                            fullErrors.currentEpisode && 'border-red-500'
-                        )}
-                        placeholder="请输入当前更新集数"
-                        keyboardType="numeric"
                     />
                 </FormItem>
             )}
             <FormItem label="总集数" error={fullErrors.totalEpisode}>
-                {/* <Controller
+                <Controller
                     control={control}
                     name="totalEpisode"
                     render={({ field }) => (
@@ -280,22 +273,17 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                 fullErrors.totalEpisode && 'border-red-500'
                             )}
                             placeholder="请输入总集数"
-                            onChangeText={text => field.onChange(parseInt(text) || 0)}
+                            onChangeText={text => {
+                                if (text === '') {
+                                    field.onChange(text)
+                                } else {
+                                    field.onChange(parseInt(text))
+                                }
+                            }}
                             keyboardType="numeric"
                             value={field.value?.toString() || ''}
                         />
                     )}
-                /> */}
-                <TextInput
-                    {...register('totalEpisode', {
-                        valueAsNumber: true,
-                    })}
-                    className={cn(
-                        'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                        fullErrors.totalEpisode && 'border-red-500'
-                    )}
-                    placeholder="请输入总集数"
-                    keyboardType="numeric"
                 />
             </FormItem>
             <FormItem label="封面URL" error={fullErrors.cover}>
@@ -346,7 +334,6 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     />
                 )}
             />
-            <DevTool control={control} placement="top-right" />
         </KeyboardAwareScrollView>
     )
 }
