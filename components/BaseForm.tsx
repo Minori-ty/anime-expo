@@ -6,13 +6,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Picker } from '@react-native-picker/picker'
 import dayjs from 'dayjs'
 import { useNavigation } from 'expo-router'
-import React, { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react'
-import { Controller, FieldError, FieldErrors, useForm } from 'react-hook-form'
+import React, { PropsWithChildren, useEffect, useMemo, useRef } from 'react'
+import { Controller, FieldError, FieldErrors, SubmitHandler, useForm, useWatch } from 'react-hook-form'
 import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import type { DeepExpand } from 'types-tools'
 import { z, ZodIssueCode, ZodTypeAny } from 'zod'
 import { RadioGroup } from './RadioGroup'
+import { FormSchema, formSchema } from './schema'
 import { IconSymbol } from './ui/IconSymbol'
 
 interface IBaseFormData {
@@ -37,14 +38,9 @@ type ICompletedExtera = {
 export type TCompletedForm = DeepExpand<IBaseFormData> & DeepExpand<ICompletedExtera>
 
 export type TFormData = DeepExpand<TSerializingForm> | DeepExpand<TCompletedForm>
-function isSerializingErrors(errors: FieldErrors<TFormData>): errors is FieldErrors<TSerializingForm> {
-    return 'currentEpisode' in errors
-}
-function isCompletedErrors(errors: FieldErrors<TFormData>): errors is FieldErrors<TCompletedForm> {
-    return 'firstEpisodeYYYYMMDDHHmm' in errors
-}
+
 export interface IBaseAnimeFormProps {
-    onSubmit: (data: TFormData) => void
+    onSubmit: SubmitHandler<FormSchema>
     formData: {
         name: string
         updateTimeHHmm: string
@@ -142,15 +138,15 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         })
     }, [navigation])
 
-    const [status, setStatus] = useState(formData.status)
+    // const [status, setStatus] = useState(formData.status)
 
-    useEffect(() => {
-        setStatus(formData.status)
-    }, [formData])
+    // useEffect(() => {
+    //     setStatus(formData.status)
+    // }, [formData])
 
     const options = EStatus.toSelect()
 
-    const formSchema = createSchema(status)
+    // const formSchema = createSchema(status)
     const datepickerRef = useRef<IDatePickerRef>(null)
     const timepickerRef = useRef<IDatePickerRef>(null)
     const {
@@ -158,10 +154,32 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         handleSubmit,
         formState: { errors },
         watch,
-    } = useForm<TFormData>({
+    } = useForm<FormSchema>({
+        mode: 'all',
         resolver: zodResolver(formSchema),
         defaultValues: formData,
     })
+
+    const fullErrors: FieldErrors<
+        Extract<
+            FormSchema,
+            {
+                currentEpisode: number
+                updateWeekday: typeof EWeekday.valueType
+                updateTimeHHmm: string
+            }
+        >
+    > &
+        FieldErrors<
+            Extract<
+                FormSchema,
+                {
+                    firstEpisodeYYYYMMDDHHmm: string
+                }
+            >
+        > = errors
+
+    const status = useWatch({ control, name: 'status' })
 
     const [currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday] = watch([
         'currentEpisode',
@@ -170,7 +188,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         'updateTimeHHmm',
         'updateWeekday',
     ])
-    const onSubmit = async (data: TFormData) => {
+    const onSubmit: SubmitHandler<FormSchema> = async data => {
         submit(data)
     }
     const getLastEpisodeDateTime = useMemo<string>(() => {
@@ -194,7 +212,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
     }, [status, currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday])
     return (
         <KeyboardAwareScrollView bottomOffset={100} showsVerticalScrollIndicator={false} className="bg-white px-4 pt-5">
-            <FormItem label="番剧名称" error={errors.name}>
+            <FormItem label="番剧名称" error={fullErrors.name}>
                 <Controller
                     control={control}
                     name="name"
@@ -203,7 +221,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             {...field}
                             className={cn(
                                 'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                errors.name && 'border-red-500'
+                                fullErrors.name && 'border-red-500'
                             )}
                             placeholder="请输入番剧名称"
                             onChangeText={field.onChange}
@@ -212,7 +230,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     )}
                 />
             </FormItem>
-            <FormItem label="番剧名称" error={errors.status}>
+            <FormItem label="更新状态" error={fullErrors.status}>
                 <Controller
                     control={control}
                     name="status"
@@ -223,17 +241,13 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             value={field.value}
                             onChange={(val: typeof EStatus.valueType) => {
                                 field.onChange(val)
-                                setStatus(val)
                             }}
                         />
                     )}
                 />
             </FormItem>
             {status !== EStatus.serializing && (
-                <FormItem
-                    label="首播时间"
-                    error={isCompletedErrors(errors) ? errors.firstEpisodeYYYYMMDDHHmm : undefined}
-                >
+                <FormItem label="首播时间" error={fullErrors.firstEpisodeYYYYMMDDHHmm}>
                     <Controller
                         control={control}
                         name="firstEpisodeYYYYMMDDHHmm"
@@ -242,7 +256,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                 activeOpacity={0.5}
                                 className={cn(
                                     'h-10 flex-row items-center rounded-md border-1 border-[#ccc] pl-3',
-                                    isCompletedErrors(errors) && errors.firstEpisodeYYYYMMDDHHmm && 'border-red-500'
+                                    fullErrors.firstEpisodeYYYYMMDDHHmm && 'border-red-500'
                                 )}
                                 onPress={() => datepickerRef.current?.open()}
                             >
@@ -264,7 +278,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
             )}
 
             {status === EStatus.serializing && (
-                <FormItem label="更新周" error={isSerializingErrors(errors) ? errors.updateWeekday : undefined}>
+                <FormItem label="更新周" error={fullErrors.updateWeekday}>
                     <Controller
                         control={control}
                         name="updateWeekday"
@@ -284,10 +298,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                 </FormItem>
             )}
             {status === EStatus.serializing && (
-                <FormItem
-                    label="更新时间(HH:mm)"
-                    error={isSerializingErrors(errors) ? errors.updateTimeHHmm : undefined}
-                >
+                <FormItem label="更新时间(HH:mm)" error={fullErrors.updateTimeHHmm}>
                     <Controller
                         control={control}
                         name="updateTimeHHmm"
@@ -296,9 +307,9 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                 activeOpacity={0.5}
                                 className={cn(
                                     'h-10 flex-row items-center rounded-md border-1 border-[#ccc] pl-3',
-                                    isSerializingErrors(errors) && errors.updateTimeHHmm && 'border-red-500'
+                                    fullErrors.updateTimeHHmm && 'border-red-500'
                                 )}
-                                onPress={() => datepickerRef.current?.open()}
+                                onPress={() => timepickerRef.current?.open()}
                             >
                                 <IconSymbol size={20} name="calendar" color={'#1f1f1f'} />
                                 <Text className="ml-3 text-lg">{dayjs(field.value).format('HH:mm')}</Text>
@@ -308,7 +319,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                 </FormItem>
             )}
             {status === EStatus.serializing && (
-                <FormItem label="当前更新集数" error={isSerializingErrors(errors) ? errors.currentEpisode : undefined}>
+                <FormItem label="当前更新集数" error={fullErrors.currentEpisode}>
                     <Controller
                         control={control}
                         name="currentEpisode"
@@ -317,7 +328,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                 {...field}
                                 className={cn(
                                     'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                    isSerializingErrors(errors) && errors.currentEpisode && 'border-red-500'
+                                    fullErrors.currentEpisode && 'border-red-500'
                                 )}
                                 placeholder="请输入当前更新集数"
                                 onChangeText={text => field.onChange(parseInt(text) || 0)}
@@ -328,7 +339,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     />
                 </FormItem>
             )}
-            <FormItem label="总集数" error={errors.totalEpisode}>
+            <FormItem label="总集数" error={fullErrors.totalEpisode}>
                 <Controller
                     control={control}
                     name="totalEpisode"
@@ -337,7 +348,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             {...field}
                             className={cn(
                                 'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                errors.totalEpisode && 'border-red-500'
+                                fullErrors.totalEpisode && 'border-red-500'
                             )}
                             placeholder="请输入总集数"
                             onChangeText={text => field.onChange(parseInt(text) || 0)}
@@ -347,7 +358,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     )}
                 />
             </FormItem>
-            <FormItem label="封面URL" error={errors.cover}>
+            <FormItem label="封面URL" error={fullErrors.cover}>
                 <Controller
                     control={control}
                     name="cover"
@@ -356,7 +367,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             {...field}
                             className={cn(
                                 'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                errors.cover && 'border-red-500'
+                                fullErrors.cover && 'border-red-500'
                             )}
                             placeholder="请输入封面图片URL"
                             onChangeText={field.onChange}

@@ -1,5 +1,6 @@
 import { addAnime } from '@/api'
-import BaseAnimeForm, { TFormData } from '@/components/BaseForm'
+import BaseAnimeForm from '@/components/BaseForm'
+import { FormSchema } from '@/components/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
@@ -7,6 +8,7 @@ import { useMutation } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { router, useNavigation } from 'expo-router'
 import React, { useLayoutEffect } from 'react'
+import { SubmitHandler } from 'react-hook-form'
 
 export default function Index() {
     const navigation = useNavigation()
@@ -17,7 +19,7 @@ export default function Index() {
         })
     }, [navigation])
 
-    async function onSubmit(data: TFormData) {
+    const onSubmit: SubmitHandler<FormSchema> = data => {
         const { name, cover, totalEpisode } = data
         if (data.status === EStatus.serializing) {
             const { currentEpisode } = data
