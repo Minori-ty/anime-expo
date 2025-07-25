@@ -10,7 +10,8 @@ import { queryClient } from '@/utils/react-query'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
-import React, { createContext, useContext, useState } from 'react'
+import { throttle } from 'lodash-es'
+import React, { createContext, useCallback, useContext, useState } from 'react'
 import { Dimensions, FlatList, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -66,13 +67,24 @@ export default function MyAnime() {
             })
         },
     })
+
+    const handlePress = useCallback(() => {
+        const throttledPush = throttle(() => {
+            router.push('/addAnime')
+        }, 300)
+
+        throttledPush()
+
+        return () => throttledPush.cancel()
+    }, [router])
+
     return (
         <ModalContext.Provider value={{ modalVisible, setModalVisible, animeData, setAnimeData }}>
             <SafeAreaView edges={['top']} className="flex-1 bg-white">
                 <PageHeader
                     title="动漫追番"
                     actions={[
-                        <TouchableOpacity onPress={() => router.push('/addAnime')} key={'header'}>
+                        <TouchableOpacity onPress={handlePress} key={'header'}>
                             <IconSymbol size={35} name="plus.app.fill" color="black" />
                         </TouchableOpacity>,
                     ]}

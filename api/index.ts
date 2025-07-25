@@ -205,6 +205,15 @@ export async function getSchedule() {
         })
 }
 
+export async function hasCalendar(animeId: number) {
+    const result = await db.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
+    if (result.length === 0) {
+        console.log('该动漫没有绑定日历表数据，有可能是已经完结的动漫')
+        return false
+    }
+    return true
+}
+
 /**
  * 如果有，就删除日历事件
  * @param tx

@@ -1,6 +1,6 @@
 import { addAnime } from '@/api'
 import BaseAnimeForm from '@/components/BaseForm'
-import { TFormSchema } from '@/components/schema'
+import { type TFormSchema } from '@/components/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
@@ -8,7 +8,7 @@ import { useMutation } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { router, useNavigation } from 'expo-router'
 import React, { useLayoutEffect } from 'react'
-import { SubmitHandler } from 'react-hook-form'
+import { type SubmitHandler } from 'react-hook-form'
 
 const formData = {
     name: 'asf',

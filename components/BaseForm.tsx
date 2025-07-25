@@ -126,6 +126,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                 .format('YYYY-MM-DD HH:mm')
         }
     }, [status, currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday])
+
     return (
         <KeyboardAwareScrollView bottomOffset={100} showsVerticalScrollIndicator={false} className="bg-white px-4 pt-5">
             <FormItem label="番剧名称" error={fullErrors.name}>

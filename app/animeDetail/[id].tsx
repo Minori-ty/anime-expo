@@ -1,4 +1,4 @@
-import { getAnimeById } from '@/api'
+import { getAnimeById, hasCalendar } from '@/api'
 import Loading from '@/components/lottie/Loading'
 import { IconSymbol } from '@/components/ui/IconSymbol'
 import { EStatus, EWeekday } from '@/enums'
@@ -10,9 +10,15 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
-import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { throttle } from 'lodash-es'
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import DateTimePicker, { CalendarComponents, CalendarDay, DateType, useDefaultStyles } from 'react-native-ui-datepicker'
+import DateTimePicker, {
+    type CalendarComponents,
+    type CalendarDay,
+    type DateType,
+    useDefaultStyles,
+} from 'react-native-ui-datepicker'
 
 const animeDetailContext = createContext<IAnimeDetailContext | null>(null)
 
@@ -50,10 +56,21 @@ function AnimeDetail() {
         queryKey: ['anime-detail', id],
         queryFn: () => getAnimeById(Number(id)),
     })
+
     const [date, setDate] = useState<DateType>(anime.firstEpisodeYYYYMMDDHHmm && dayjs().format('YYYY-MM-DD HH:mm'))
     useEffect(() => {
         setDate(anime.firstEpisodeYYYYMMDDHHmm)
     }, [isLoading, anime])
+
+    const handlePress = useCallback(() => {
+        const throttledPush = throttle(() => {
+            router.push(`/editAnime/${anime.id}`)
+        }, 300)
+
+        throttledPush()
+
+        return () => throttledPush.cancel()
+    }, [router, anime.id])
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -61,18 +78,25 @@ function AnimeDetail() {
             headerTitleAlign: 'center',
             headerRight: () => {
                 return (
-                    <TouchableOpacity onPress={() => router.push(`/editAnime/${anime.id}`)}>
+                    <TouchableOpacity onPress={handlePress}>
                         <IconSymbol size={28} name="text.append" color={'black'} />
                     </TouchableOpacity>
                 )
             },
         })
-    }, [navigation, , anime.id, router])
+    }, [navigation, handlePress])
 
     const progress = useMemo(() => {
         return Math.round((anime.currentEpisode / anime.totalEpisode) * 100)
     }, [anime.currentEpisode, anime.totalEpisode])
+
     const defaultStyles = useDefaultStyles()
+
+    const { data: calendar = false } = useQuery({
+        queryKey: ['anime-calendar', id],
+        queryFn: () => hasCalendar(Number(id)),
+    })
+
     if (isLoading || !anime) {
         return <Loading />
     }
@@ -94,6 +118,7 @@ function AnimeDetail() {
     const components: CalendarComponents = {
         Day: (day: CalendarDay) => <Day day={day} />,
     }
+
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header */}
@@ -213,7 +238,32 @@ function AnimeDetail() {
                         </View>
                     </View>
 
-                    <View className="mt-2 bg-white p-6">
+                    {/* 有完结的时候才显示这个订阅 */}
+                    {!calendar && (
+                        <View className="mt-2 bg-white p-6">
+                            <TouchableOpacity
+                                className="mt-3 flex-row items-center justify-center rounded-xl bg-green-500 py-4"
+                                activeOpacity={0.5}
+                            >
+                                <Text className="mr-2 text-lg text-white">🔔</Text>
+                                <Text className="font-medium text-white">设置更新提醒</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {calendar && (
+                        <View className="mt-2 bg-white p-6">
+                            <TouchableOpacity
+                                className="mt-3 flex-row items-center justify-center rounded-xl bg-red-500 py-4"
+                                activeOpacity={0.5}
+                            >
+                                <Text className="mr-2 text-lg text-white">🔕</Text>
+                                <Text className="font-medium text-white">取消更新提醒</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    <View className="mx-6 mt-2 rounded-md bg-white">
                         <DateTimePicker
                             styles={defaultStyles}
                             mode="single"
@@ -237,8 +287,12 @@ export default AnimeDetail
 
 function Day({ day }: { day: CalendarDay }) {
     const { isSelected, isCurrentMonth } = day
-    console.log(isCurrentMonth)
     const { totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm } = useAnimeDetailContext()
+
+    const episode = useMemo(() => {
+        return checkEpisodeUpdate({ date: day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm })
+    }, [day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm])
+
     return (
         <View className="items-center">
             <Text
@@ -250,17 +304,19 @@ function Day({ day }: { day: CalendarDay }) {
             >
                 {day.text}
             </Text>
-            {checkEpisodeUpdate({ date: day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm }) && (
-                <Text
-                    style={styles.episodeText}
-                    className={cn(
-                        'font-archivo text-foreground absolute -bottom-2 flex-1 items-center justify-center bg-sky-400',
-                        isSelected && 'text-white',
-                        !isCurrentMonth && 'text-gray-400'
-                    )}
-                >
-                    {checkEpisodeUpdate({ date: day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm })}
-                </Text>
+            {episode && (
+                <View className="absolute -bottom-2 w-full">
+                    <Text
+                        style={styles.episodeText}
+                        className={cn(
+                            'font-archivo text-foreground text-center',
+                            isSelected && 'text-white',
+                            !isCurrentMonth && 'text-gray-400'
+                        )}
+                    >
+                        {episode}
+                    </Text>
+                </View>
             )}
         </View>
     )

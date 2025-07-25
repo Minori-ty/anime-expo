@@ -9,7 +9,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect } from 'react'
-import { SubmitHandler } from 'react-hook-form'
+import { type SubmitHandler } from 'react-hook-form'
 
 const formData = {
     name: 'asf',
