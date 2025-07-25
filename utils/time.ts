@@ -35,8 +35,8 @@ export function isCurrentWeekdayUpdateTimePassed(YYYYMMDDHHmm: string) {
     if (currentWeekday !== updateWeekday) {
         return currentWeekday > updateWeekday
     }
-    const hour = dayjs(YYYYMMDDHHmm).hour()
-    const minute = dayjs(YYYYMMDDHHmm).minute()
+    const hour = dayjs(YYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').hour()
+    const minute = dayjs(YYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').minute()
     const currentHour = now.hour()
     const currentMinute = now.minute()
 
@@ -78,16 +78,21 @@ interface IGetFirstEpisodeTimestamp {
     updateTimeHHmm: string
     updateWeekday: typeof EWeekday.valueType
 }
+/**
+ * 获取第一集更新的时间戳
+ * @param data
+ * @returns
+ */
 export function getFirstEpisodeTimestamp(data: IGetFirstEpisodeTimestamp) {
     const { currentEpisode, updateTimeHHmm, updateWeekday } = data
     const hour = dayjs(updateTimeHHmm).hour()
     const minute = dayjs(updateTimeHHmm).minute()
     /** 本周的更新时间 */
     const updatetime = dayjs().isoWeekday(updateWeekday).hour(Number(hour)).minute(Number(minute))
-    const offest = isCurrentWeekdayUpdateTimePassed(dayjs().format('YYYY-MM-DD HH:mm'))
+    const offest = isCurrentWeekdayUpdateTimePassed(updatetime.format('YYYY-MM-DD HH:mm'))
         ? currentEpisode
         : currentEpisode + 1
-    return updatetime.subtract(offest, 'week').unix()
+    return updatetime.subtract(offest - 1, 'week').unix()
 }
 
 interface IGetLastEpisodeTimestamp {
