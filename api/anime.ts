@@ -6,7 +6,7 @@ import { getLastEpisodeTimestamp, getStatus } from '@/utils/time'
 import dayjs from 'dayjs'
 import { eq } from 'drizzle-orm'
 
-interface IAddAnimeData {
+export interface IAddAnimeData {
     name: string
     currentEpisode: number
     totalEpisode: number
@@ -74,7 +74,7 @@ export async function updateAnimeById(tx: TTx, data: IUpdateAnimeByAnimeId) {
     console.log('更新动漫数据成功')
 }
 
-interface IAnime {
+export interface IAnime {
     id: number
     name: string
     currentEpisode: number
@@ -111,6 +111,15 @@ export async function getAnimeById(tx: TTx, id: number) {
     return result[0]
 }
 
+export async function handleGetAnimeById(id: number) {
+    const result = await db.select().from(animeTable).where(eq(animeTable.id, id))
+    if (result.length === 0) {
+        console.log('对应的动漫数据不存在')
+        return
+    }
+    return parseAnimeData(result[0])
+}
+
 interface IParseAnimeData {
     id: number
     name: string
@@ -138,6 +147,6 @@ export function parseAnimeData(data: IParseAnimeData): IAnime {
         firstEpisodeYYYYMMDDHHmm,
         lastEpisodeYYYYMMDDHHmm,
         status,
-        updateTimeHHmm: dayjs(firstEpisodeYYYYMMDDHHmm).format('HH:mm'),
+        updateTimeHHmm: firstEpisodeYYYYMMDDHHmm,
     }
 }

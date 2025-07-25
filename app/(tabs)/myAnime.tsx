@@ -1,4 +1,4 @@
-import { deleteAnimeById, getAnime } from '@/api'
+import { getAnimeList, handleDeleteAnime } from '@/api'
 import CustomModal from '@/components/CustomModal'
 import PageHeader from '@/components/PageHeader'
 import { IconSymbol } from '@/components/ui/IconSymbol'
@@ -45,11 +45,11 @@ export default function MyAnime() {
 
     const { data: list = [] } = useQuery({
         queryKey: ['my-anime'],
-        queryFn: getAnime,
+        queryFn: getAnimeList,
     })
 
     async function onDeleteAnime() {
-        const result = await deleteAnimeById(animeData.id)
+        const result = await handleDeleteAnime(animeData.id)
         setModalVisible(false)
         return result
     }

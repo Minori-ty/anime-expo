@@ -1,4 +1,4 @@
-import { addAnime } from '@/api'
+import { handleAddAnime } from '@/api'
 import BaseAnimeForm from '@/components/BaseForm'
 import { type TFormSchema } from '@/components/schema'
 import { EStatus, EWeekday } from '@/enums'
@@ -63,7 +63,7 @@ export default function Index() {
     }
 
     const { mutate: addAnimeMution } = useMutation({
-        mutationFn: addAnime,
+        mutationFn: handleAddAnime,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['my-anime'],

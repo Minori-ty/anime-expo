@@ -1,4 +1,5 @@
-import { getAnimeById, hasCalendar } from '@/api'
+import { handleGetAnimeById } from '@/api/anime'
+import { hasCalendar } from '@/api/calendar'
 import Loading from '@/components/lottie/Loading'
 import { IconSymbol } from '@/components/ui/IconSymbol'
 import { EStatus, EWeekday } from '@/enums'
@@ -54,7 +55,7 @@ function AnimeDetail() {
         isLoading,
     } = useQuery({
         queryKey: ['anime-detail', id],
-        queryFn: () => getAnimeById(Number(id)),
+        queryFn: () => handleGetAnimeById(Number(id)),
     })
 
     const [date, setDate] = useState<DateType>(anime.firstEpisodeYYYYMMDDHHmm && dayjs().format('YYYY-MM-DD HH:mm'))
@@ -299,7 +300,7 @@ function Day({ day }: { day: CalendarDay }) {
                 className={cn(
                     'font-archivo text-foreground',
                     isSelected && 'text-white',
-                    !isCurrentMonth && 'text-gray-400'
+                    !isCurrentMonth && 'text-gray-200'
                 )}
             >
                 {day.text}
@@ -311,7 +312,7 @@ function Day({ day }: { day: CalendarDay }) {
                         className={cn(
                             'font-archivo text-foreground text-center',
                             isSelected && 'text-white',
-                            !isCurrentMonth && 'text-gray-400'
+                            !isCurrentMonth && 'text-gray-200'
                         )}
                     >
                         {episode}

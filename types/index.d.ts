@@ -1,4 +1,4 @@
-import { getAnime } from '@/api'
+import type { IAnime } from '@/api/anime'
 import type { ExtractTablesWithRelations } from 'drizzle-orm'
 import type { SQLiteTransaction } from 'drizzle-orm/sqlite-core'
 import type { SQLiteRunResult } from 'expo-sqlite'
@@ -11,7 +11,7 @@ export type TTx = SQLiteTransaction<
     ExtractTablesWithRelations<Record<string, never>>
 >
 
-export type TAnimeList = Awaited<ReturnType<typeof getAnime>>
+export type TAnimeList = IAnime[]
 
 /** 对象转ZodType */
 export type ToZodType<T> = {

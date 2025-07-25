@@ -1,6 +1,9 @@
+import { db } from '@/db'
 import { calendarTable } from '@/db/schema'
 import { TTx } from '@/types'
+import { createCalendarEvent, deleteCalendarEvent } from '@/utils/calendar'
 import { eq } from 'drizzle-orm'
+import { IAddAnimeData } from './anime'
 
 /**
  * 根据动漫id添加日历事件表数据
@@ -70,4 +73,40 @@ export async function getCalendarByAnimeId(tx: TTx, animeId: number) {
         return
     }
     return result[0]
+}
+
+export async function hasCalendar(animeId: number) {
+    const result = await db.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
+    if (result.length === 0) {
+        console.log('对应的日历事件不存在')
+        return false
+    }
+    return true
+}
+
+/**
+ * 统一创建日历事件并写入日历表
+ */
+export async function createAndBindCalendar(tx: TTx, animeId: number, data: IAddAnimeData) {
+    await clearCalendarByAnimeId(tx, animeId)
+    const eventId = await createCalendarEvent({
+        name: data.name,
+        firstEpisodeTimestamp: data.firstEpisodeTimestamp,
+        currentEpisode: data.currentEpisode,
+        totalEpisode: data.totalEpisode,
+    })
+    if (eventId) {
+        await addCalendar(tx, animeId, eventId)
+    }
+}
+
+/**
+ * 统一删除日历事件及其关联表
+ */
+export async function clearCalendarByAnimeId(tx: TTx, animeId: number) {
+    const calendar = await getCalendarByAnimeId(tx, animeId)
+    if (calendar) {
+        await deleteCalendarEvent(calendar.calendarId)
+        await deleteCalendarByAnimeId(tx, animeId)
+    }
 }

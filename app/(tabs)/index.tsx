@@ -1,4 +1,4 @@
-import { getSchedule } from '@/api'
+import { getScheduleList } from '@/api/schedule'
 import Empty from '@/components/lottie/Empty'
 import { EWeekday } from '@/enums'
 import { blurhash } from '@/styles'
@@ -54,7 +54,7 @@ export default function Index() {
     const [index, setIndex] = useState<number>(EWeekday.monday)
 
     const { data: list = [] } = useQuery({
-        queryFn: getSchedule,
+        queryFn: getScheduleList,
         queryKey: ['schedule'],
     })
 

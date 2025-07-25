@@ -24,7 +24,7 @@ export function getStatus(firstEpisodeTimestamp: number, lastEpisodeTimestamp: n
 
 /**
  * 判断连载中的动漫是否到了更新时间点
- * @param firstEpisodeYYYYMMDDHHmm
+ * @param YYYYMMDDHHmm
  * @returns
  */
 export function isCurrentWeekdayUpdateTimePassed(YYYYMMDDHHmm: string) {
@@ -47,6 +47,16 @@ export function isCurrentWeekdayUpdateTimePassed(YYYYMMDDHHmm: string) {
         return currentMinute > minute
     }
     return true
+}
+
+/**
+ * 判断是否本周将要更新
+ * @param firstEpisodeTimestamp
+ */
+export function willUpdateThisWeek(firstEpisodeTimestamp: number) {
+    const weekStartTimestamp = getMondayTimestampInThisWeek()
+    const weekEndTimestamp = getSundayTimestampInThisWeek()
+    return firstEpisodeTimestamp >= weekStartTimestamp && firstEpisodeTimestamp <= weekEndTimestamp
 }
 
 /**

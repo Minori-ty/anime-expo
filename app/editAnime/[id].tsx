@@ -1,4 +1,5 @@
-import { getAnimeById, updateAnime } from '@/api'
+import { handleUpdateAnime } from '@/api'
+import { handleGetAnimeById } from '@/api/anime'
 import BaseAnimeForm from '@/components/BaseForm'
 import Loading from '@/components/lottie/Loading'
 import { TFormSchema } from '@/components/schema'
@@ -35,7 +36,7 @@ export default function EditAnime() {
 
     const { data, isLoading } = useQuery({
         queryKey: ['anime-edit', id],
-        queryFn: () => getAnimeById(Number(id)),
+        queryFn: () => handleGetAnimeById(Number(id)),
     })
 
     const onSubmit: SubmitHandler<TFormSchema> = data => {
@@ -43,7 +44,7 @@ export default function EditAnime() {
         if (data.status === EStatus.serializing) {
             const { currentEpisode } = data
             updateAnimeMution({
-                id: Number(id),
+                animeId: Number(id),
                 name,
                 currentEpisode,
                 totalEpisode,
@@ -53,7 +54,7 @@ export default function EditAnime() {
         } else if (data.status === EStatus.completed) {
             const { firstEpisodeYYYYMMDDHHmm } = data
             updateAnimeMution({
-                id: Number(id),
+                animeId: Number(id),
                 name,
                 currentEpisode: totalEpisode,
                 totalEpisode,
@@ -63,7 +64,7 @@ export default function EditAnime() {
         } else if (data.status === EStatus.toBeUpdated) {
             const { firstEpisodeYYYYMMDDHHmm } = data
             updateAnimeMution({
-                id: Number(id),
+                animeId: Number(id),
                 name,
                 currentEpisode: 0,
                 totalEpisode,
@@ -74,7 +75,7 @@ export default function EditAnime() {
     }
 
     const { mutate: updateAnimeMution } = useMutation({
-        mutationFn: updateAnime,
+        mutationFn: handleUpdateAnime,
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['my-anime'],
