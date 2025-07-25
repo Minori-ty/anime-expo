@@ -263,7 +263,7 @@ function AnimeDetail() {
                         </View>
                     )}
 
-                    <View className="mx-6 mt-2 rounded-md bg-white">
+                    <View className="mb-16 mt-2 rounded-md bg-white px-10 py-5">
                         <DateTimePicker
                             styles={defaultStyles}
                             mode="single"

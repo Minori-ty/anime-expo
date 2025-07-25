@@ -72,11 +72,12 @@ export function getFirstEpisodeTimestamp(data: IGetFirstEpisodeTimestamp) {
     const { currentEpisode, updateTimeHHmm, updateWeekday } = data
     const hour = dayjs(updateTimeHHmm).hour()
     const minute = dayjs(updateTimeHHmm).minute()
+    /** 本周的更新时间 */
     const updatetime = dayjs().isoWeekday(updateWeekday).hour(Number(hour)).minute(Number(minute))
     const offest = isCurrentWeekdayUpdateTimePassed(dayjs().format('YYYY-MM-DD HH:mm'))
         ? currentEpisode
         : currentEpisode + 1
-    return updatetime.subtract(offest - 1, 'week').unix()
+    return updatetime.subtract(offest, 'week').unix()
 }
 
 interface IGetLastEpisodeTimestamp {
@@ -86,6 +87,6 @@ interface IGetLastEpisodeTimestamp {
 export function getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode }: IGetLastEpisodeTimestamp) {
     return dayjs
         .unix(firstEpisodeTimestamp)
-        .add(totalEpisode * 7, 'day')
+        .add((totalEpisode - 1) * 7, 'day')
         .unix()
 }

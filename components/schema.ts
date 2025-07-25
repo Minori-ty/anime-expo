@@ -1,4 +1,5 @@
 import { EStatus, EWeekday } from '@/enums'
+import { getLastEpisodeTimestamp } from '@/utils/time'
 import dayjs from 'dayjs'
 import { z, ZodIssueCode } from 'zod'
 
@@ -62,9 +63,7 @@ const formSchema = z
                     message: '当前番剧还未播出，请选择即将更新状态',
                 })
             }
-            const lastEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`)
-                .add((totalEpisode - 1) * 7, 'day')
-                .unix()
+            const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
 
             if (lastEpisodeTimestamp > dayjs().unix()) {
                 ctx.addIssue({
@@ -78,9 +77,7 @@ const formSchema = z
         if (val.status === EStatus.toBeUpdated) {
             const { firstEpisodeYYYYMMDDHHmm, totalEpisode } = val
             const firstEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
-            const lastEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`)
-                .add((totalEpisode - 1) * 7, 'day')
-                .unix()
+            const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
             if (firstEpisodeTimestamp < dayjs().unix() && lastEpisodeTimestamp > dayjs().unix()) {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,

@@ -3,7 +3,12 @@ import { animeTable, calendarTable, scheduleTable, upcomingTable } from '@/db/sc
 import { EStatus, EWeekday } from '@/enums'
 import { TTx } from '@/types'
 import { createCalendarEvent, deleteCalendarEvent } from '@/utils/calendar'
-import { getMondayTimestampInThisWeek, getStatus, getSundayTimestampInThisWeek } from '@/utils/time'
+import {
+    getLastEpisodeTimestamp,
+    getMondayTimestampInThisWeek,
+    getStatus,
+    getSundayTimestampInThisWeek,
+} from '@/utils/time'
 import dayjs from 'dayjs'
 import { eq } from 'drizzle-orm'
 
@@ -17,10 +22,8 @@ export async function getAnime() {
         const { id, name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = item
         const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
         const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
-        const lastEpisodeTimestamp = dayjs
-            .unix(firstEpisodeTimestamp)
-            .add(totalEpisode * 7, 'day')
-            .unix()
+        const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
+
         const lastEpisodeYYYYMMDDHHmm = dayjs.unix(lastEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
         const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
 
@@ -48,10 +51,7 @@ export async function getAnimeById(id: number) {
     const { name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = anime
     const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
     const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
-    const lastEpisodeTimestamp = dayjs
-        .unix(firstEpisodeTimestamp)
-        .add(totalEpisode * 7, 'day')
-        .unix()
+    const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
     const lastEpisodeYYYYMMDDHHmm = dayjs.unix(lastEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
     const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
 
@@ -101,10 +101,7 @@ interface IUpdateAnime extends IInsertAnimeData {
 export async function updateAnime(data: IUpdateAnime) {
     return await db.transaction(async tx => {
         const { id, name, cover, totalEpisode, currentEpisode, firstEpisodeTimestamp } = data
-        const lastEpisodeTimestamp = dayjs
-            .unix(firstEpisodeTimestamp)
-            .add(totalEpisode * 7, 'day')
-            .unix()
+        const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
         const newStatus = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
         const anime = await getAnimeById(id)
         if (!anime) {
@@ -183,10 +180,7 @@ export async function getSchedule() {
             const { id, name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = item
             const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
             const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
-            const lastEpisodeTimestamp = dayjs
-                .unix(firstEpisodeTimestamp)
-                .add(totalEpisode * 7, 'day')
-                .unix()
+            const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
             const lastEpisodeYYYYMMDDHHmm = dayjs.unix(lastEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
             const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
 
@@ -249,10 +243,7 @@ interface IAddScheduleIfNeed {
  */
 export async function addScheduleIfNeed(tx: TTx, animeId: number, data: IAddScheduleIfNeed) {
     const { firstEpisodeTimestamp, totalEpisode, name, currentEpisode } = data
-    const lastEpisodeTimestamp = dayjs
-        .unix(firstEpisodeTimestamp)
-        .add(totalEpisode * 7, 'day')
-        .unix()
+    const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
     const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
     if (status === EStatus.completed) {
         // 如果是完结，但是在本周内完结的，则可以插入到表中
@@ -304,10 +295,7 @@ interface IAddToBeUpdatedIfNeed {
  */
 export async function addToBeUpdatedIfNeed(tx: TTx, animeId: number, data: IAddToBeUpdatedIfNeed) {
     const { firstEpisodeTimestamp, totalEpisode, name, currentEpisode } = data
-    const lastEpisodeTimestamp = dayjs
-        .unix(firstEpisodeTimestamp)
-        .add(totalEpisode * 7, 'day')
-        .unix()
+    const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
     const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
     if (status === EStatus.toBeUpdated) {
         await tx.insert(upcomingTable).values({
