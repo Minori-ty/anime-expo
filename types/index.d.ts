@@ -34,3 +34,29 @@ export type ToZodType<T> = {
 
 // 辅助类型：确保类型符合 ZodTypeAny 约束
 type EnsureZodType<T> = T extends ZodTypeAny ? T : never
+
+export interface LocalFile {
+    id: string
+    name: string
+    size: number
+    createdAt: string
+    type: 'export' | 'import'
+}
+
+export interface AnimeEvent {
+    id: string
+    title: string
+    episode: number
+    airDate: string
+    isRegistered: boolean
+    description?: string
+}
+
+export interface AppData {
+    animeEvents: AnimeEvent[]
+    settings: {
+        notifications: boolean
+        autoSync: boolean
+    }
+    lastUpdated: string
+}
