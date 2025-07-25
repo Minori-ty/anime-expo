@@ -26,7 +26,7 @@ export const scheduleTable = sqliteTable('schdule', {
 })
 
 /** 动漫即将更新表数据表 */
-export const upcomingTable = sqliteTable('upcoming', {
+export const toBeUpdatedTable = sqliteTable('upcoming', {
     id: integer('id').primaryKey({ autoIncrement: true }).notNull(),
     animeId: integer('anime_id')
         .notNull()

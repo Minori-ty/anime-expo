@@ -15,7 +15,7 @@ const statusSchema = z.discriminatedUnion('status', [
             z.literal(EWeekday.saturday),
             z.literal(EWeekday.sunday),
         ]),
-        currentEpisode: z.coerce.number().min(1, '当前集数至少为1'),
+        currentEpisode: z.coerce.number(),
         updateTimeHHmm: z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm'),
     }),
     z.object({
@@ -36,6 +36,13 @@ const formSchema = z
     .and(statusSchema)
     .superRefine((val, ctx) => {
         if (val.status === EStatus.serializing) {
+            if (val.currentEpisode === 0) {
+                ctx.addIssue({
+                    code: ZodIssueCode.custom,
+                    path: ['currentEpisode'],
+                    message: '当前番剧还未播出，请选择即将更新状态',
+                })
+            }
             if (val.currentEpisode > val.totalEpisode) {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,

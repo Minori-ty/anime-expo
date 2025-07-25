@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { animeTable, calendarTable, scheduleTable, upcomingTable } from '@/db/schema'
+import { animeTable, calendarTable, scheduleTable, toBeUpdatedTable } from '@/db/schema'
 import { EStatus, EWeekday } from '@/enums'
 import { TTx } from '@/types'
 import { createCalendarEvent, deleteCalendarEvent } from '@/utils/calendar'
@@ -298,7 +298,7 @@ export async function addToBeUpdatedIfNeed(tx: TTx, animeId: number, data: IAddT
     const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
     const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
     if (status === EStatus.toBeUpdated) {
-        await tx.insert(upcomingTable).values({
+        await tx.insert(toBeUpdatedTable).values({
             animeId,
         })
 
@@ -312,7 +312,7 @@ export async function addToBeUpdatedIfNeed(tx: TTx, animeId: number, data: IAddT
 }
 
 export async function deleteToBeUpdatedByAnimeId(tx: TTx, animeId: number) {
-    await tx.delete(upcomingTable).where(eq(upcomingTable.animeId, animeId))
+    await tx.delete(toBeUpdatedTable).where(eq(toBeUpdatedTable.animeId, animeId))
     const result = await tx.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
     if (result.length === 0) {
         console.log('没有关联的日历事件表')

@@ -84,6 +84,9 @@ interface IGetLastEpisodeTimestamp {
     firstEpisodeTimestamp: number
     totalEpisode: number
 }
+/**
+ * 获取最后一集更新的时间戳
+ */
 export function getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode }: IGetLastEpisodeTimestamp) {
     return dayjs
         .unix(firstEpisodeTimestamp)
