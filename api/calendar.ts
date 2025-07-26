@@ -1,7 +1,7 @@
 import { db } from '@/db'
-import { calendarTable } from '@/db/schema'
+import { animeTable, calendarTable } from '@/db/schema'
 import { TTx } from '@/types'
-import { createCalendarEvent, deleteCalendarEvent } from '@/utils/calendar'
+import { createCalendarEvent, deleteCalendarEvent, getCalendarEventByEventId } from '@/utils/calendar'
 import { eq } from 'drizzle-orm'
 import { IAddAnimeData } from './anime'
 
@@ -71,18 +71,60 @@ export async function getCalendarByAnimeId(tx: TTx, animeId: number) {
 
     if (result.length === 0) {
         console.log('对应的日历事件不存在')
-        return
+        return false
     }
-    return result[0]
+    const hasEvent = await getCalendarEventByEventId(result[0].calendarId)
+    if (hasEvent) {
+        return result[0]
+    } else {
+        // 表数据存在，而事件不存在，就把表数据删除了
+        await db.delete(calendarTable).where(eq(calendarTable.animeId, animeId))
+        return false
+    }
 }
 
+/**
+ * 获取全部已存在的日历事件和动漫列表
+ * @returns
+ */
+export async function getCalendarWithAnimeList() {
+    return await db.transaction(async tx => {
+        const result = await tx
+            .select()
+            .from(calendarTable)
+            .innerJoin(animeTable, eq(animeTable.id, calendarTable.animeId))
+        const list = await Promise.all(
+            result.map(async item => {
+                return {
+                    ...item,
+                    exists: await getCalendarByAnimeId(tx, item.anime.id),
+                }
+            })
+        )
+        return list
+            .filter(item => item.exists)
+            .map(item => {
+                return {
+                    calendar: item.calendar,
+                    anime: item.anime,
+                }
+            })
+    })
+}
+
+/**
+ * 根据动漫id，判断日历事件是否存在
+ * @param animeId
+ * @returns
+ */
 export async function hasCalendar(animeId: number) {
     const result = await db.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
     if (result.length === 0) {
         console.log('对应的日历事件不存在')
         return false
     }
-    return true
+    const eventId = result[0].calendarId
+    return await getCalendarEventByEventId(eventId)
 }
 
 /**

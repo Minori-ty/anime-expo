@@ -2,7 +2,7 @@ import Checkbox from '@/components/Checkbox'
 import { useAnimeEvents } from '@/hooks/useAnimeEvents'
 import { useFileManager } from '@/hooks/useFileManager'
 import type { AppData } from '@/types'
-import { saveJsonToPublicDirectory } from '@/utils/fileSave'
+import { exportToFile } from '@/utils/fileSave'
 import { Calendar, Clock, Download, FileText, Settings, Trash2, Upload } from 'lucide-react-native'
 import { useState } from 'react'
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native'
@@ -77,7 +77,7 @@ export default function ManagementCenter() {
 
             const exportedFile = await exportData(appData)
             const data = { foo: 'bar', count: 42 }
-            await saveJsonToPublicDirectory('app_data.json', data)
+            await exportToFile('app_data.json', data)
             Alert.alert('导出成功', `数据已导出为 ${exportedFile.name}`)
         } catch {
             Alert.alert('导出失败', '请稍后重试')
