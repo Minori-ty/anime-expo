@@ -5,6 +5,7 @@ import { TTx } from '@/types'
 import { getLastEpisodeTimestamp, getStatus } from '@/utils/time'
 import dayjs from 'dayjs'
 import { eq } from 'drizzle-orm'
+import type { DeepExpand } from 'types-tools'
 
 export interface IAddAnimeData {
     name: string
@@ -117,12 +118,11 @@ export async function getAnimeById(tx: TTx, id: number) {
  * @returns
  */
 export async function handleGetAnimeById(id: number) {
-    const result = await db.select().from(animeTable).where(eq(animeTable.id, id))
-    if (result.length === 0) {
-        console.log('对应的动漫数据不存在')
-        return
-    }
-    return parseAnimeData(result[0])
+    return db.transaction(async tx => {
+        const data = await getAnimeById(tx, id)
+        if (!data) return
+        return parseAnimeData(data)
+    })
 }
 
 interface IParseAnimeData {
@@ -139,7 +139,7 @@ interface IParseAnimeData {
  * @param data - 动漫数据
  * @returns
  */
-export function parseAnimeData(data: IParseAnimeData): IAnime {
+export function parseAnimeData(data: IParseAnimeData): DeepExpand<IAnime> {
     const { id, name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = data
     const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
     const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')

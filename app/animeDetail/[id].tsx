@@ -1,11 +1,12 @@
 import { handleGetAnimeById } from '@/api/anime'
-import { hasCalendar } from '@/api/calendar'
+import { handleClearCalendarByAnimeId, handleCreateAndBindCalendar, hasCalendar } from '@/api/calendar'
 import Loading from '@/components/lottie/Loading'
 import { IconSymbol } from '@/components/ui/IconSymbol'
 import { EStatus, EWeekday } from '@/enums'
 import { blurhash } from '@/styles'
 import { cn } from '@/utils/nativewind'
-import { useQuery } from '@tanstack/react-query'
+import { queryClient } from '@/utils/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
@@ -73,6 +74,56 @@ function AnimeDetail() {
 
         return () => throttledPush.cancel()
     }, [router, anime.id])
+
+    const { mutate: handleCreateAndBindCalendarMution } = useMutation({
+        mutationFn: handleCreateAndBindCalendar,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['anime-calendar', id],
+            })
+        },
+        onError: err => {
+            alert(err)
+        },
+    })
+
+    /** 添加订阅 */
+    const handleSubscribe = useCallback(() => {
+        const throttledPush = throttle(() => {
+            handleCreateAndBindCalendarMution({
+                animeId: Number(id),
+                ...anime,
+                firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').unix(),
+            })
+        }, 300)
+
+        throttledPush()
+
+        return () => throttledPush.cancel()
+    }, [anime, id, handleCreateAndBindCalendarMution])
+
+    const { mutate: handleClearCalendarByAnimeIdMution } = useMutation({
+        mutationFn: handleClearCalendarByAnimeId,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['anime-calendar', id],
+            })
+        },
+        onError: err => {
+            alert(err)
+        },
+    })
+
+    /** 删除订阅 */
+    const handleUnsubscribe = useCallback(() => {
+        const throttledPush = throttle(() => {
+            handleClearCalendarByAnimeIdMution(Number(id))
+        }, 300)
+
+        throttledPush()
+
+        return () => throttledPush.cancel()
+    }, [id, handleClearCalendarByAnimeIdMution])
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -246,6 +297,7 @@ function AnimeDetail() {
                             <TouchableOpacity
                                 className="mt-3 flex-row items-center justify-center rounded-xl bg-green-500 py-4"
                                 activeOpacity={0.5}
+                                onPress={handleSubscribe}
                             >
                                 <Text className="mr-2 text-lg text-white">🔔</Text>
                                 <Text className="font-medium text-white">设置更新提醒</Text>
@@ -258,6 +310,7 @@ function AnimeDetail() {
                             <TouchableOpacity
                                 className="mt-3 flex-row items-center justify-center rounded-xl bg-red-500 py-4"
                                 activeOpacity={0.5}
+                                onPress={handleUnsubscribe}
                             >
                                 <Text className="mr-2 text-lg text-white">🔕</Text>
                                 <Text className="font-medium text-white">取消更新提醒</Text>

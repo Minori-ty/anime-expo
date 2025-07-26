@@ -86,6 +86,9 @@ export async function hasCalendar(animeId: number) {
 
 /**
  * 统一创建日历事件并写入日历表
+ * @param tx
+ * @param animeId
+ * @param data
  */
 export async function createAndBindCalendar(tx: TTx, animeId: number, data: IAddAnimeData) {
     await clearCalendarByAnimeId(tx, animeId)
@@ -102,6 +105,8 @@ export async function createAndBindCalendar(tx: TTx, animeId: number, data: IAdd
 
 /**
  * 统一删除日历事件及其关联表
+ * @param tx
+ * @param animeId
  */
 export async function clearCalendarByAnimeId(tx: TTx, animeId: number) {
     const calendar = await getCalendarByAnimeId(tx, animeId)
@@ -109,4 +114,30 @@ export async function clearCalendarByAnimeId(tx: TTx, animeId: number) {
         await deleteCalendarEvent(calendar.calendarId)
         await deleteCalendarByAnimeId(tx, animeId)
     }
+}
+
+interface IHandleCreateAndBindCalendar extends IAddAnimeData {
+    animeId: number
+}
+/**
+ * 统一创建日历事件并写入日历表
+ * @param animeId
+ * @param data
+ * @returns
+ */
+export function handleCreateAndBindCalendar(data: IHandleCreateAndBindCalendar) {
+    return db.transaction(async tx => {
+        await createAndBindCalendar(tx, data.animeId, data)
+    })
+}
+
+/**
+ * 统一删除日历事件及其关联表
+ * @param animeId
+ * @returns
+ */
+export function handleClearCalendarByAnimeId(animeId: number) {
+    return db.transaction(async tx => {
+        await clearCalendarByAnimeId(tx, animeId)
+    })
 }
