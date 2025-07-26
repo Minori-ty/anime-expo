@@ -1,49 +1,108 @@
-import { PermissionsAndroid, Platform } from 'react-native'
+import { IAnime } from '@/api/anime'
+import * as DocumentPicker from 'expo-document-picker'
+import * as FileSystem from 'expo-file-system'
 import RNFS from 'react-native-fs'
 
 /**
- * 导出数据为本地json
+ * 导出数据为json文件
  * @param data
  * @param filename
  * @returns
  */
-export async function exportJsonWithRNFS(data: object, filename = 'export.json') {
+export async function exportJsonFile(data: object, filename: string) {
     try {
-        const json = JSON.stringify(data, null, 2)
-
-        let filePath = ''
-
-        if (Platform.OS === 'android') {
-            // Android 10 及以下需要权限
-            const androidVersion = parseInt(String(Platform.Version), 10)
-            if (androidVersion <= 29) {
-                const granted = await PermissionsAndroid.request(
-                    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-                    {
-                        title: '存储权限',
-                        message: '应用需要写入存储权限以保存文件',
-                        buttonPositive: '允许',
-                    }
-                )
-                if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-                    alert('无法导出，未获得存储权限')
-                    return
-                }
-            }
-
-            // Android 10+ 默认支持写入 DownloadDirectoryPath
-            filePath = `${RNFS.DownloadDirectoryPath}/${filename}`
-        } else {
-            // iOS：写入应用内沙盒（无法访问下载目录）
-            filePath = `${RNFS.DocumentDirectoryPath}/${filename}`
+        if (!filename.endsWith('.json')) {
+            filename += '.json'
         }
 
-        await RNFS.writeFile(filePath, json, 'utf8')
-
-        alert(`导出成功，文件已保存到:\n${filePath}`)
-        console.log('导出成功:', filePath)
+        const path = `${RNFS.ExternalDirectoryPath}/${filename}`
+        const content = JSON.stringify(data, null, 2)
+        await RNFS.writeFile(path, content, 'utf8')
+        return true
     } catch (error) {
-        console.error('导出失败:', error)
-        alert('导出失败，请检查日志')
+        console.error('创建 JSON 文件失败:', error)
+        return false
+    }
+}
+
+/**
+ * 导入json文件数据
+ * @returns
+ */
+export async function importJsonFile(): Promise<{ animeList: IAnime[] }> {
+    try {
+        // 1. 选择文件
+        const result = await DocumentPicker.getDocumentAsync({
+            type: 'application/json', // 限定只选 JSON 文件
+            copyToCacheDirectory: true, // 拷贝一份，确保我们可以读取
+        })
+
+        if (result.canceled || !result.assets || result.assets.length === 0) {
+            console.log('用户取消选择')
+            return { animeList: [] }
+        }
+
+        const file = result.assets[0]
+        const fileUri = file.uri // 这是缓存路径，可直接读取
+
+        // 2. 读取文件内容
+        const content = await FileSystem.readAsStringAsync(fileUri, {
+            encoding: FileSystem.EncodingType.UTF8,
+        })
+
+        // 3. 尝试解析 JSON
+        const data = JSON.parse(content)
+        return data
+    } catch (error) {
+        console.error('读取 JSON 文件失败:', error)
+        return { animeList: [] }
+    }
+}
+
+/**
+ * 扫描私有文件夹中的json文件
+ * @returns
+ */
+export async function scanJsonFile() {
+    try {
+        const files = await RNFS.readDir(RNFS.ExternalDirectoryPath)
+        const jsonFiles = files
+            .filter(file => file.isFile() && file.name.endsWith('.json'))
+            .map(file => {
+                return {
+                    name: file.name,
+                    size: file.size ?? 0,
+                }
+            }) // 👈 只取文件名
+        return jsonFiles
+    } catch (error) {
+        console.error('扫描 JSON 文件失败:', error)
+        return []
+    }
+}
+
+/**
+ * 删除json文件
+ * @param fileName
+ * @returns
+ */
+export async function deleteJsonFile(fileName: string): Promise<boolean> {
+    try {
+        if (!fileName.endsWith('.json')) {
+            fileName += '.json'
+        }
+
+        const path = `${RNFS.ExternalDirectoryPath}/${fileName}`
+        const exists = await RNFS.exists(path)
+        if (!exists) {
+            console.warn('文件不存在:', path)
+            return false
+        }
+
+        await RNFS.unlink(path)
+        return true
+    } catch (error) {
+        console.error('删除 JSON 文件失败:', error)
+        return false
     }
 }

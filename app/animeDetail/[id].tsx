@@ -1,6 +1,7 @@
 import { handleGetAnimeById } from '@/api/anime'
 import { handleClearCalendarByAnimeId, handleCreateAndBindCalendar, hasCalendar } from '@/api/calendar'
 import Loading from '@/components/lottie/Loading'
+import Icon from '@/components/ui/Icon'
 import { IconSymbol } from '@/components/ui/IconSymbol'
 import { EStatus, EWeekday } from '@/enums'
 import { blurhash } from '@/styles'
@@ -75,20 +76,22 @@ function AnimeDetail() {
         return () => throttledPush.cancel()
     }, [router, anime.id])
 
-    const { mutate: handleCreateAndBindCalendarMution } = useMutation({
-        mutationFn: handleCreateAndBindCalendar,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['anime-calendar', id],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['settings'],
-            })
-        },
-        onError: err => {
-            alert(err)
-        },
-    })
+    /** 添加订阅 */
+    const { mutate: handleCreateAndBindCalendarMution, isPending: isHandleCreateAndBindCalendarMutionLoading } =
+        useMutation({
+            mutationFn: handleCreateAndBindCalendar,
+            onSuccess: () => {
+                queryClient.invalidateQueries({
+                    queryKey: ['anime-calendar', id],
+                })
+                queryClient.invalidateQueries({
+                    queryKey: ['settings-calendar'],
+                })
+            },
+            onError: err => {
+                alert(`创建日历失败 ${err}`)
+            },
+        })
 
     /** 添加订阅 */
     const handleSubscribe = useCallback(() => {
@@ -105,20 +108,22 @@ function AnimeDetail() {
         return () => throttledPush.cancel()
     }, [anime, id, handleCreateAndBindCalendarMution])
 
-    const { mutate: handleClearCalendarByAnimeIdMution } = useMutation({
-        mutationFn: handleClearCalendarByAnimeId,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['anime-calendar', id],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['settings'],
-            })
-        },
-        onError: err => {
-            alert(err)
-        },
-    })
+    /** 删除订阅 */
+    const { mutate: handleClearCalendarByAnimeIdMution, isPending: isHandleClearCalendarByAnimeIdMutionLoading } =
+        useMutation({
+            mutationFn: handleClearCalendarByAnimeId,
+            onSuccess: () => {
+                queryClient.invalidateQueries({
+                    queryKey: ['anime-calendar', id],
+                })
+                queryClient.invalidateQueries({
+                    queryKey: ['settings-calendar'],
+                })
+            },
+            onError: err => {
+                alert(err)
+            },
+        })
 
     /** 删除订阅 */
     const handleUnsubscribe = useCallback(() => {
@@ -304,8 +309,9 @@ function AnimeDetail() {
                                 className="mt-3 flex-row items-center justify-center rounded-xl bg-green-500 py-4"
                                 activeOpacity={0.5}
                                 onPress={handleSubscribe}
+                                disabled={isHandleCreateAndBindCalendarMutionLoading}
                             >
-                                <Text className="mr-2 text-lg text-white">🔔</Text>
+                                <Icon name="Bell" className="mr-2 text-white" size={20} />
                                 <Text className="font-medium text-white">设置更新提醒</Text>
                             </TouchableOpacity>
                         </View>
@@ -317,8 +323,9 @@ function AnimeDetail() {
                                 className="mt-3 flex-row items-center justify-center rounded-xl bg-red-500 py-4"
                                 activeOpacity={0.5}
                                 onPress={handleUnsubscribe}
+                                disabled={isHandleClearCalendarByAnimeIdMutionLoading}
                             >
-                                <Text className="mr-2 text-lg text-white">🔕</Text>
+                                <Icon name="BellOff" className="mr-2 text-white" size={20} />
                                 <Text className="font-medium text-white">取消更新提醒</Text>
                             </TouchableOpacity>
                         </View>
@@ -336,15 +343,15 @@ function AnimeDetail() {
                             locale="zh"
                             components={components}
                         />
-                        <View className="h-12 items-end">
+                        <View className="h-16 items-end">
                             {dayjs(date).format('YYYY-MM-DD') !== dayjs().format('YYYY-MM-DD') && (
                                 <TouchableOpacity
                                     // eslint-disable-next-line tailwindcss/no-custom-classname
-                                    className="elevation-lg size-12 items-center justify-center rounded-full bg-blue-500"
+                                    className="elevation-lg size-16 items-center justify-center rounded-full bg-blue-500"
                                     onPress={() => setDate(dayjs())}
                                     activeOpacity={0.5}
                                 >
-                                    <Text className="text-2xl text-white">今</Text>
+                                    <Text className="text-3xl text-white">今</Text>
                                 </TouchableOpacity>
                             )}
                         </View>

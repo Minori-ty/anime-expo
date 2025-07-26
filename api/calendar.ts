@@ -80,7 +80,7 @@ export async function getCalendarByAnimeId(tx: TTx, animeId: number) {
     const result = await tx.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
 
     if (result.length === 0) {
-        console.log('对应的日历事件不存在')
+        console.log('该动漫没有注册日历事件，有可能是完结的动漫，也有可能是被用户主动删除了')
         return false
     }
     const hasEvent = await getCalendarEventByEventId(result[0].calendarId)
@@ -88,6 +88,7 @@ export async function getCalendarByAnimeId(tx: TTx, animeId: number) {
         return result[0]
     } else {
         // 表数据存在，而事件不存在，就把表数据删除了
+        console.log('日历表中有数据，但是没有这个日历事件，该事件已被用户删除，所以删除日历表中的数据')
         await db.delete(calendarTable).where(eq(calendarTable.animeId, animeId))
         return false
     }
@@ -197,10 +198,5 @@ export async function handleClearCalendarByAnimeId(animeId: number) {
  * @returns
  */
 export async function handleCalendarByAnimeIdList(animeIdList: number[]) {
-    return await db.transaction(async tx => {
-        await deleteCalendarByAnimeIdList(tx, animeIdList)
-        for (const animeId of animeIdList) {
-            await deleteCalendarByAnimeId(tx, animeId)
-        }
-    })
+    return await Promise.all(animeIdList.map(handleClearCalendarByAnimeId))
 }

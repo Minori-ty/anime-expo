@@ -34,7 +34,7 @@ export default function Index() {
         const { name, cover, totalEpisode } = data
         if (data.status === EStatus.serializing) {
             const { currentEpisode } = data
-            addAnimeMution({
+            handleAddAnimeMution({
                 name,
                 currentEpisode,
                 totalEpisode,
@@ -43,7 +43,7 @@ export default function Index() {
             })
         } else if (data.status === EStatus.completed) {
             const { firstEpisodeYYYYMMDDHHmm } = data
-            addAnimeMution({
+            handleAddAnimeMution({
                 name,
                 currentEpisode: totalEpisode,
                 totalEpisode,
@@ -52,7 +52,7 @@ export default function Index() {
             })
         } else if (data.status === EStatus.toBeUpdated) {
             const { firstEpisodeYYYYMMDDHHmm } = data
-            addAnimeMution({
+            handleAddAnimeMution({
                 name,
                 currentEpisode: 0,
                 totalEpisode,
@@ -62,7 +62,7 @@ export default function Index() {
         }
     }
 
-    const { mutate: addAnimeMution } = useMutation({
+    const { mutate: handleAddAnimeMution } = useMutation({
         mutationFn: handleAddAnime,
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -70,6 +70,9 @@ export default function Index() {
             })
             queryClient.invalidateQueries({
                 queryKey: ['schedule'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['settings-calendar'],
             })
 
             router.back()

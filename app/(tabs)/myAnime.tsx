@@ -1,6 +1,7 @@
 import { getAnimeList, handleDeleteAnime } from '@/api'
 import CustomModal from '@/components/CustomModal'
 import PageHeader from '@/components/PageHeader'
+import Icon from '@/components/ui/Icon'
 import { IconSymbol } from '@/components/ui/IconSymbol'
 import { EStatus } from '@/enums'
 import { blurhash } from '@/styles'
@@ -65,6 +66,9 @@ export default function MyAnime() {
             queryClient.invalidateQueries({
                 queryKey: ['schedule'],
             })
+            queryClient.invalidateQueries({
+                queryKey: ['settings-calendar'],
+            })
         },
     })
 
@@ -80,14 +84,16 @@ export default function MyAnime() {
 
     return (
         <ModalContext.Provider value={{ modalVisible, setModalVisible, animeData, setAnimeData }}>
-            <SafeAreaView edges={['top']} className="flex-1 bg-white">
+            <SafeAreaView edges={['top']} className="flex-1 bg-white pt-4">
                 <PageHeader
-                    title="动漫追番"
+                    title="我的追番"
                     actions={[
                         <TouchableOpacity onPress={handlePress} key={'header'}>
                             <IconSymbol size={35} name="plus.app.fill" color="black" />
                         </TouchableOpacity>,
                     ]}
+                    leading={<Icon name="Heart" size={24} />}
+                    className="px-6"
                 />
                 {list.length > 0 ? <AnimeContainer list={list} /> : <Empty />}
             </SafeAreaView>

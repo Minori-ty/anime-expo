@@ -20,14 +20,21 @@ export interface IAddAnimeData {
  * @param data
  * @returns
  */
-export async function addAnime(tx: TTx, data: IAddAnimeData | IAddAnimeData[]) {
-    const values = Array.isArray(data) ? data : [data]
-    const result = await tx.insert(animeTable).values(values).returning()
+export async function addAnime(tx: TTx, data: IAddAnimeData) {
+    const result = await tx.insert(animeTable).values(data).returning()
     if (result.length === 0) {
         console.log('添加动漫失败')
         return
     }
     return result[0]
+}
+export async function addAnimeList(tx: TTx, dataList: IAddAnimeData[]) {
+    const result = await tx.insert(animeTable).values(dataList).returning()
+    if (result.length === 0) {
+        console.log('添加动漫失败')
+        return
+    }
+    return result
 }
 
 /**

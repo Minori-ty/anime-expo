@@ -1,61 +1,34 @@
-import { getAnimeList } from '@/api'
+import { getAnimeList, handleAddAnime } from '@/api'
 import { getCalendarWithAnimeList, handleCalendarByAnimeIdList, handleClearCalendarByAnimeId } from '@/api/calendar'
 import Checkbox from '@/components/Checkbox'
-import { pickAndReadJson } from '@/utils/file'
-import { exportJsonWithRNFS } from '@/utils/file.android'
+import PageHeader from '@/components/PageHeader'
+import Icon from '@/components/ui/Icon'
+import { EStatus, EWeekday } from '@/enums'
+import { deleteJsonFile, exportJsonFile, importJsonFile, scanJsonFile } from '@/utils/file.android'
 import { queryClient } from '@/utils/react-query'
+import { getFirstEpisodeTimestamp } from '@/utils/time'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { throttle } from 'lodash-es'
-import { Calendar, Download, Settings, Trash2, Upload } from 'lucide-react-native'
+import { differenceBy, throttle } from 'lodash-es'
+import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useState } from 'react'
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { z } from 'zod'
 
 type CheckboxState = 'unchecked' | 'checked' | 'indeterminate'
 
 export default function Setting() {
     const [selectedAnimeIdList, setSelectedAnimeIdList] = useState<number[]>([])
-    const [isExporting, setIsExporting] = useState(false)
-    const [isImporting, setIsImporting] = useState(false)
-    const [json, setJson] = useState({})
-    // const list = [
-    //     {
-    //         calendar: {
-    //             id: 1,
-    //             animeId: 1,
-    //             calendarId: 'string',
-    //         },
-    //         anime: {
-    //             id: 1,
-    //             name: 'string',
-    //             currentEpisode: 1,
-    //             totalEpisode: 1,
-    //             cover: 'string',
-    //             createdAt: 1,
-    //             firstEpisodeTimestamp: 1,
-    //         },
-    //     },
-    //     {
-    //         calendar: {
-    //             id: 1,
-    //             animeId: 1,
-    //             calendarId: 'string',
-    //         },
-    //         anime: {
-    //             id: 2,
-    //             name: 'string',
-    //             currentEpisode: 1,
-    //             totalEpisode: 1,
-    //             cover: 'string',
-    //             createdAt: 1,
-    //             firstEpisodeTimestamp: 1,
-    //         },
-    //     },
-    // ]
-    const { data: list = [] } = useQuery({
-        queryKey: ['settings'],
+    const [selectedJsonFileList, setSelectedJsonFileList] = useState<string[]>([])
+
+    const { data: calendarList = [] } = useQuery({
+        queryKey: ['settings-calendar'],
         queryFn: getCalendarWithAnimeList,
+    })
+    const { data: fileList = [] } = useQuery({
+        queryKey: ['settings-json-file'],
+        queryFn: scanJsonFile,
     })
     const { mutate: handleClearCalendarByAnimeIdMution } = useMutation({
         mutationFn: handleClearCalendarByAnimeId,
@@ -64,11 +37,11 @@ export default function Setting() {
                 queryKey: ['anime-calendar'],
             })
             queryClient.invalidateQueries({
-                queryKey: ['settings'],
+                queryKey: ['settings-calendar'],
             })
         },
         onError: err => {
-            alert(err)
+            alert(`获取日历事件失败 ${err}`)
         },
     })
 
@@ -86,21 +59,23 @@ export default function Setting() {
         [handleClearCalendarByAnimeIdMution]
     )
 
-    const { mutate: handleCalendarByAnimeIdListMution } = useMutation({
-        mutationFn: handleCalendarByAnimeIdList,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['anime-calendar'],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['settings'],
-            })
-            setSelectedAnimeIdList([])
-        },
-        onError: err => {
-            alert(err)
-        },
-    })
+    /** 删除日历事件 */
+    const { mutate: handleCalendarByAnimeIdListMution, isPending: isHandleCalendarByAnimeIdListMutionLoading } =
+        useMutation({
+            mutationFn: handleCalendarByAnimeIdList,
+            onSuccess: () => {
+                queryClient.invalidateQueries({
+                    queryKey: ['anime-calendar'],
+                })
+                queryClient.invalidateQueries({
+                    queryKey: ['settings-calendar'],
+                })
+                setSelectedAnimeIdList([])
+            },
+            onError: err => {
+                alert(err)
+            },
+        })
 
     /** 删除所有日历事件 */
     const handleUnsubscribeAll = useCallback(() => {
@@ -115,7 +90,7 @@ export default function Setting() {
 
     const handleEventSelectAll = (state: CheckboxState) => {
         if (state === 'checked') {
-            setSelectedAnimeIdList(list.map(item => item.anime.id))
+            setSelectedAnimeIdList(calendarList.map(item => item.anime.id))
         } else {
             setSelectedAnimeIdList([])
         }
@@ -125,7 +100,7 @@ export default function Setting() {
     const eventSelectAllState: CheckboxState =
         selectedAnimeIdList.length === 0
             ? 'unchecked'
-            : selectedAnimeIdList.length === list.length
+            : selectedAnimeIdList.length === calendarList.length
               ? 'checked'
               : 'indeterminate'
 
@@ -153,31 +128,227 @@ export default function Setting() {
     }
 
     /**
-     * 导出数据为本地json文件
+     * 导出数据为json文件
      */
-    async function handleExportData() {
+    async function exportDataToJsonFile() {
         const data = await getAnimeList()
-        await exportJsonWithRNFS({ animeList: data }, `anime_data_${dayjs().format('YYYY_MM_DD')}.json`)
+        await exportJsonFile({ animeList: data }, `anime_data_${dayjs().format('YYYY_MM_DD')}.json`)
+        return dayjs().format('YYYY_MM_DD')
     }
+
+    const { mutate: exportDataToJsonFileMutation, isPending: isExportDataToJsonFileMutationLoading } = useMutation({
+        mutationFn: exportDataToJsonFile,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['settings-json-file'],
+            })
+        },
+        onError: err => {
+            alert(err)
+        },
+    })
+
+    const validateJsonData = z.object({
+        animeList: z.array(
+            z.object({
+                id: z.number(),
+                name: z.string(),
+                currentEpisode: z.number(),
+                totalEpisode: z.number(),
+                cover: z.string(),
+                updateWeekday: z.union([
+                    z.literal(EWeekday.monday),
+                    z.literal(EWeekday.tuesday),
+                    z.literal(EWeekday.wednesday),
+                    z.literal(EWeekday.thursday),
+                    z.literal(EWeekday.friday),
+                    z.literal(EWeekday.saturday),
+                    z.literal(EWeekday.sunday),
+                ]),
+                firstEpisodeYYYYMMDDHHmm: z.string(),
+                lastEpisodeYYYYMMDDHHmm: z.string(),
+                updateTimeHHmm: z.string(),
+                status: z.union([
+                    z.literal(EStatus.completed),
+                    z.literal(EStatus.serializing),
+                    z.literal(EStatus.toBeUpdated),
+                ]),
+            })
+        ),
+    })
 
     /**
      * 导入本地json为数据
      */
     async function handleImportData() {
-        const jsonData = await pickAndReadJson()
-        console.log(jsonData)
-        setJson(jsonData)
+        const jsonData = await importJsonFile()
+        const result = validateJsonData.safeParse(jsonData)
+        if (!result.success) {
+            console.log('json数据校验失败，不符合格式')
+            return
+        }
+        const data = await getAnimeList()
+        /** 与本地数据库中不同的数据 */
+        const res = differenceBy(jsonData.animeList, data, 'name')
+        const animeList = res.map(({ id, ...reset }) => reset)
+
+        return await Promise.all(
+            animeList.map(item => {
+                const { name, cover, totalEpisode } = item
+
+                if (item.status === EStatus.serializing) {
+                    const { currentEpisode } = item
+                    return handleAddAnime({
+                        name,
+                        currentEpisode,
+                        totalEpisode,
+                        cover,
+                        firstEpisodeTimestamp: getFirstEpisodeTimestamp(item),
+                    })
+                }
+
+                if (item.status === EStatus.completed) {
+                    const { firstEpisodeYYYYMMDDHHmm } = item
+                    return handleAddAnime({
+                        name,
+                        currentEpisode: totalEpisode,
+                        totalEpisode,
+                        cover,
+                        firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
+                    })
+                }
+
+                if (item.status === EStatus.toBeUpdated) {
+                    const { firstEpisodeYYYYMMDDHHmm } = item
+                    return handleAddAnime({
+                        name,
+                        currentEpisode: 0,
+                        totalEpisode,
+                        cover,
+                        firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
+                    })
+                }
+
+                // 如果 status 不匹配任何情况，返回一个 resolved Promise
+                return Promise.resolve()
+            })
+        )
     }
 
+    const { mutate: handleImportDataMution, isPending: isHandleImportDataMutionLoading } = useMutation({
+        mutationFn: handleImportData,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['my-anime'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['schedule'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['settings-calendar'],
+            })
+        },
+        onError: err => {
+            alert(err)
+        },
+    })
+
+    const { mutate: deleteJsonFileMution } = useMutation({
+        mutationFn: deleteJsonFile,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['my-anime'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['schedule'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['settings-calendar'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['settings-json-file'],
+            })
+        },
+        onError: err => {
+            alert(err)
+        },
+    })
+
+    async function deleteJsonFileList(fileNameList: string[]) {
+        return await Promise.all(fileNameList.map(deleteJsonFile))
+    }
+    const { mutate: deleteJsonFileListMution } = useMutation({
+        mutationFn: deleteJsonFileList,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['my-anime'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['schedule'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['settings-calendar'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['settings-json-file'],
+            })
+        },
+        onError: err => {
+            alert(err)
+        },
+    })
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return `${bytes} B`
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    }
+
+    function handleDeleteselectedJsonFileList() {
+        if (selectedJsonFileList.length === 0) return
+
+        Alert.alert('确认删除', `确定要删除选中的 ${selectedJsonFileList.length} 个文件吗？`, [
+            { text: '取消', style: 'cancel' },
+            {
+                text: '删除',
+                style: 'destructive',
+                onPress: () => {
+                    deleteJsonFileListMution(selectedJsonFileList)
+                    setSelectedJsonFileList([])
+                },
+            },
+        ])
+    }
+
+    const handleFileSelectAll = (state: CheckboxState) => {
+        if (state === 'checked') {
+            setSelectedJsonFileList(fileList.map(file => file.name))
+        } else {
+            setSelectedJsonFileList([])
+        }
+    }
+    // 文件全选状态管理
+    const fileSelectAllState: CheckboxState =
+        selectedJsonFileList.length === 0
+            ? 'unchecked'
+            : selectedJsonFileList.length === fileList.length
+              ? 'checked'
+              : 'indeterminate'
+
+    const handleFileSelect = (fileName: string, checked: boolean) => {
+        if (checked) {
+            setSelectedJsonFileList(prev => [...prev, fileName])
+        } else {
+            setSelectedJsonFileList(prev => prev.filter(name => name !== fileName))
+        }
+    }
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-gray-50">
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View className="p-4">
                     {/* 标题 */}
-                    <View className="mb-6 flex-row items-center">
-                        <Settings size={24} color="#374151" />
-                        <Text className="ml-2 text-2xl font-bold text-gray-900">管理中心</Text>
-                    </View>
+                    <PageHeader title="数据管理" leading={<Icon size={24} name="Settings" />}></PageHeader>
+
                     {/* 数据管理区域 */}
                     <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
                         <Text className="mb-4 text-lg font-semibold text-gray-900">数据管理</Text>
@@ -185,30 +356,104 @@ export default function Setting() {
                         <View className="mb-4 flex-row gap-3">
                             <TouchableOpacity
                                 className={`flex-1 flex-row items-center justify-center rounded-lg px-4 py-3 ${
-                                    isExporting ? 'bg-gray-300' : 'bg-blue-600'
+                                    isExportDataToJsonFileMutationLoading ? 'bg-gray-300' : 'bg-blue-600'
                                 }`}
-                                onPress={handleExportData}
-                                disabled={isExporting}
+                                onPress={() => exportDataToJsonFileMutation()}
+                                disabled={isExportDataToJsonFileMutationLoading}
                             >
                                 <Download size={16} color="white" />
                                 <Text className="ml-2 font-medium text-white">
-                                    {isExporting ? '导出中...' : '导出数据'}
+                                    {isExportDataToJsonFileMutationLoading ? '导出中...' : '导出数据'}
                                 </Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 className={`flex-1 flex-row items-center justify-center rounded-lg px-4 py-3 ${
-                                    isImporting ? 'bg-gray-300' : 'bg-green-600'
+                                    isHandleImportDataMutionLoading ? 'bg-gray-300' : 'bg-green-600'
                                 }`}
-                                onPress={handleImportData}
-                                disabled={isImporting}
+                                onPress={() => handleImportDataMution()}
+                                disabled={isHandleImportDataMutionLoading}
                             >
                                 <Upload size={16} color="white" />
                                 <Text className="ml-2 font-medium text-white">
-                                    {isImporting ? '导入中...' : '导入数据'}
+                                    {isHandleImportDataMutionLoading ? '导入中...' : '导入数据'}
                                 </Text>
                             </TouchableOpacity>
                         </View>
+                    </View>
+
+                    {/* 本地文件管理 */}
+                    <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
+                        <View className="mb-4 h-10 flex-row items-center justify-between">
+                            <View className="flex-row items-center">
+                                <FileText size={20} color="#374151" />
+                                <Text className="ml-2 text-lg font-semibold text-gray-900">本地文件</Text>
+                            </View>
+                            {selectedJsonFileList.length > 0 && (
+                                <TouchableOpacity
+                                    className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
+                                    onPress={handleDeleteselectedJsonFileList}
+                                >
+                                    <Trash2 size={14} color="#dc2626" />
+                                    <Text className="ml-1 text-sm font-medium text-red-600">
+                                        删除 ({selectedJsonFileList.length})
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+
+                        {fileList.length > 0 && (
+                            <View className="mb-3">
+                                <Checkbox
+                                    label="全选"
+                                    allowIndeterminate
+                                    state={fileSelectAllState}
+                                    onStateChange={handleFileSelectAll}
+                                />
+                            </View>
+                        )}
+
+                        {fileList.length === 0 ? (
+                            <Text className="py-8 text-center text-gray-500">暂无本地文件</Text>
+                        ) : (
+                            <View className="space-y-3">
+                                {fileList.map(file => (
+                                    <View key={file.name} className="flex-row items-center rounded-lg bg-gray-50 p-3">
+                                        <Checkbox
+                                            state={selectedJsonFileList.includes(file.name) ? 'checked' : 'unchecked'}
+                                            onStateChange={state => handleFileSelect(file.name, state === 'checked')}
+                                        />
+                                        <View className="ml-3 flex-1">
+                                            <Text className="font-medium text-gray-900">{file.name}</Text>
+                                            <View className="mt-1 flex-row items-center">
+                                                <Text className="text-sm text-gray-500">
+                                                    {formatFileSize(file.size)}
+                                                </Text>
+                                                <Text className="mx-2 text-sm text-gray-400">•</Text>
+                                                {/* <Text className="text-sm text-gray-500">
+                                                    {formatDate(file.createdAt)}
+                                                </Text> */}
+                                            </View>
+                                        </View>
+                                        <TouchableOpacity
+                                            className="p-2"
+                                            onPress={() => {
+                                                Alert.alert('确认删除', `确定要删除文件 ${file.name} 吗？`, [
+                                                    { text: '取消', style: 'cancel' },
+                                                    {
+                                                        text: '删除',
+                                                        style: 'destructive',
+                                                        onPress: () => deleteJsonFileMution(file.name),
+                                                    },
+                                                ])
+                                            }}
+                                        >
+                                            <Trash2 size={16} color="#ef4444" />
+                                        </TouchableOpacity>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
                     </View>
 
                     {/* 日历事件管理 */}
@@ -222,6 +467,7 @@ export default function Setting() {
                                 <TouchableOpacity
                                     className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
                                     onPress={onHandleDeleteAll}
+                                    disabled={isHandleCalendarByAnimeIdListMutionLoading}
                                 >
                                     <Trash2 size={14} color="#dc2626" />
                                     <Text className="ml-1 text-sm font-medium text-red-600">
@@ -231,7 +477,7 @@ export default function Setting() {
                             )}
                         </View>
 
-                        {list.length > 0 && (
+                        {calendarList.length > 0 && (
                             <View className="mb-3">
                                 <Checkbox
                                     label="全选"
@@ -242,11 +488,11 @@ export default function Setting() {
                             </View>
                         )}
 
-                        {list.length === 0 ? (
+                        {calendarList.length === 0 ? (
                             <Text className="py-8 text-center text-gray-500">暂无日历事件</Text>
                         ) : (
                             <View className="space-y-3">
-                                {list.map(item => {
+                                {calendarList.map(item => {
                                     return (
                                         <View
                                             key={item.anime.id}
@@ -289,8 +535,6 @@ export default function Setting() {
                         )}
                     </View>
                 </View>
-
-                <Text>{JSON.stringify(json)}</Text>
             </ScrollView>
         </SafeAreaView>
     )

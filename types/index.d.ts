@@ -1,4 +1,5 @@
 import type { IAnime } from '@/api/anime'
+import { animeTable } from '@/db/schema'
 import type { ExtractTablesWithRelations } from 'drizzle-orm'
 import type { SQLiteTransaction } from 'drizzle-orm/sqlite-core'
 import type { SQLiteRunResult } from 'expo-sqlite'
@@ -60,3 +61,6 @@ export interface AppData {
     }
     lastUpdated: string
 }
+
+/** 动漫表的返回数据类型 */
+export type TAnimeTableSelect = typeof animeTable.$inferSelect

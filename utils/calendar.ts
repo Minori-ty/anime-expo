@@ -104,7 +104,7 @@ export async function createCalendarEvent({
         console.log('创建日历成功')
         return eventId
     } catch (error) {
-        alert(error)
+        alert(`calendar.ts ${error}`)
         return '' as const
     }
 }
@@ -127,5 +127,11 @@ export async function getCalendarEventByEventId(eventId: string) {
         console.log('没有找到可修改的默认日历')
         return false
     }
-    return (await Calendar.getEventAsync(eventId)) ? true : false
+    try {
+        await Calendar.getEventAsync(eventId)
+        return true
+    } catch {
+        console.log('没有找到日历事件')
+        return false
+    }
 }
