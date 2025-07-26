@@ -90,9 +90,9 @@ export function getFirstEpisodeTimestamp(data: IGetFirstEpisodeTimestamp) {
     /** 本周的更新时间 */
     const updatetime = dayjs().isoWeekday(updateWeekday).hour(Number(hour)).minute(Number(minute))
     const offest = isCurrentWeekdayUpdateTimePassed(updatetime.format('YYYY-MM-DD HH:mm'))
-        ? currentEpisode
-        : currentEpisode + 1
-    return updatetime.subtract(offest - 1, 'week').unix()
+        ? currentEpisode - 1
+        : currentEpisode
+    return updatetime.subtract(offest, 'week').unix()
 }
 
 interface IGetLastEpisodeTimestamp {

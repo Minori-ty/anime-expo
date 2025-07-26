@@ -111,6 +111,11 @@ export async function getAnimeById(tx: TTx, id: number) {
     return result[0]
 }
 
+/**
+ * 根据id查找动漫
+ * @param id - 动漫id
+ * @returns
+ */
 export async function handleGetAnimeById(id: number) {
     const result = await db.select().from(animeTable).where(eq(animeTable.id, id))
     if (result.length === 0) {
@@ -129,6 +134,11 @@ interface IParseAnimeData {
     createdAt: number
     firstEpisodeTimestamp: number
 }
+/**
+ * 将数据解析为动漫数据格式
+ * @param data - 动漫数据
+ * @returns
+ */
 export function parseAnimeData(data: IParseAnimeData): IAnime {
     const { id, name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = data
     const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType

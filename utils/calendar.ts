@@ -77,7 +77,7 @@ export async function createCalendarEvent({
         ? updateDayInCurrentWeek.add(7, 'day').toDate()
         : updateDayInCurrentWeek.toDate()
     /** 日历事件结束的时候 */
-    const endDate = dayjs(startDate).add(23, 'minute').toDate()
+    const endDate = dayjs(startDate).add(1, 'minute').toDate()
 
     // 解析输入的时间字符串
     try {

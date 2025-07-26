@@ -273,7 +273,6 @@ function AnimeDetail() {
                             firstDayOfWeek={1}
                             multiRangeMode
                             showOutsideDays
-                            timePicker
                             locale="zh"
                             components={components}
                         />

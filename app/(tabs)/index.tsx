@@ -92,10 +92,11 @@ function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.va
 
     const mapSchedule: Record<string, TAnimeList> = {}
     animeList.forEach(item => {
-        if (mapSchedule[item.updateTimeHHmm]) {
-            mapSchedule[item.updateTimeHHmm].push(item)
+        const HHmm = dayjs(item.firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').format('HH:mm')
+        if (mapSchedule[HHmm]) {
+            mapSchedule[HHmm].push(item)
         } else {
-            mapSchedule[item.updateTimeHHmm] = [item]
+            mapSchedule[HHmm] = [item]
         }
     })
 
@@ -123,7 +124,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
     return (
         <View className="my-2 flex-row">
             <View className="w-16 items-center justify-start">
-                <Text>{time}</Text>
+                <Text className="font-medium">{time}</Text>
             </View>
             <View className="flex-1">
                 {animeList.map(item => {

@@ -19,7 +19,7 @@ export interface RadioItemProps<T extends string | number> {
 }
 
 export function RadioItem<T extends string | number>(props: RadioItemProps<T>) {
-    const { label, value, selected, onPress, size = 20, color = '#fb7299', labelStyle } = props
+    const { label, value, selected, onPress, size = 20, color = '#fb7299' } = props
     return (
         <TouchableOpacity
             className="my-1 flex-row items-center"
