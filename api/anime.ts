@@ -70,6 +70,7 @@ export async function updateAnimeById(tx: TTx, data: IUpdateAnimeByAnimeId) {
             currentEpisode,
             firstEpisodeTimestamp,
             totalEpisode,
+            createdAt: dayjs().unix(),
         })
         .where(eq(animeTable.id, data.animeId))
     console.log('更新动漫数据成功')

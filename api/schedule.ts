@@ -43,7 +43,7 @@ export async function deleteScheduleByAnimeId(tx: TTx, animeId: number) {
  * @returns
  */
 export async function getScheduleList() {
-    const result = await db.select().from(scheduleTable).leftJoin(animeTable, eq(scheduleTable.animeId, animeTable.id))
+    const result = await db.select().from(scheduleTable).leftJoin(animeTable, eq(animeTable.id, scheduleTable.animeId))
     const animeList = result
         .map(item => item.anime)
         .filter(anime => anime !== null)

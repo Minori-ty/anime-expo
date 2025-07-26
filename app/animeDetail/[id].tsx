@@ -330,6 +330,18 @@ function AnimeDetail() {
                             locale="zh"
                             components={components}
                         />
+                        <View className="h-12 items-end">
+                            {dayjs(date).format('YYYY-MM-DD') !== dayjs().format('YYYY-MM-DD') && (
+                                <TouchableOpacity
+                                    // eslint-disable-next-line tailwindcss/no-custom-classname
+                                    className="elevation-lg size-12 items-center justify-center rounded-full bg-blue-500"
+                                    onPress={() => setDate(dayjs())}
+                                    activeOpacity={0.5}
+                                >
+                                    <Text className="text-2xl text-white">今</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
                 </animeDetailContext.Provider>
             </ScrollView>
@@ -340,38 +352,46 @@ function AnimeDetail() {
 export default AnimeDetail
 
 function Day({ day }: { day: CalendarDay }) {
-    const { isSelected, isCurrentMonth } = day
-    const { totalEpisode, firstEpisodeYYYYMMDDHHmm } = useAnimeDetailContext()
+    const { isSelected, isCurrentMonth, isToday } = day
+    const { totalEpisode, firstEpisodeYYYYMMDDHHmm, currentEpisode } = useAnimeDetailContext()
 
     const episode = useMemo(() => {
-        return checkEpisodeUpdate({ date: day.date, totalEpisode, firstEpisodeYYYYMMDDHHmm })
-    }, [day.date, totalEpisode, firstEpisodeYYYYMMDDHHmm])
+        return checkEpisodeUpdate({ date: day.date, totalEpisode, firstEpisodeYYYYMMDDHHmm, currentEpisode })
+    }, [day.date, totalEpisode, firstEpisodeYYYYMMDDHHmm, currentEpisode])
 
     return (
-        <View className="items-center">
+        <View
+            className={cn(
+                'relative w-full flex-1 items-center rounded border border-transparent bg-white',
+                isSelected && 'border border-blue-500',
+                isSelected && isToday && 'bg-blue-500'
+            )}
+        >
             <Text
                 className={cn(
-                    'font-archivo text-foreground',
-                    isSelected && 'text-white',
-                    !isCurrentMonth && 'text-gray-200'
+                    'font-archivo text-foreground top-2',
+                    !isCurrentMonth && 'text-gray-200',
+                    isSelected && isToday && 'text-white',
+                    !isSelected && isToday && 'text-blue-500'
                 )}
             >
                 {day.text}
             </Text>
-            {episode && (
-                <View className="absolute -bottom-2 w-full">
+            {
+                <View className="absolute bottom-2 w-full">
                     <Text
                         style={styles.episodeText}
                         className={cn(
                             'font-archivo text-foreground text-center',
-                            isSelected && 'text-white',
-                            !isCurrentMonth && 'text-gray-200'
+                            !isCurrentMonth && 'text-gray-200',
+                            isSelected && isToday && 'text-white',
+                            !isSelected && isToday && 'text-blue-500'
                         )}
                     >
                         {episode}
                     </Text>
                 </View>
-            )}
+            }
         </View>
     )
 }
@@ -380,31 +400,26 @@ interface ICheckEpisodeUpdate {
     firstEpisodeYYYYMMDDHHmm: string
     totalEpisode: number
     date: string
+    currentEpisode: number
 }
 function checkEpisodeUpdate({ date, firstEpisodeYYYYMMDDHHmm, totalEpisode }: ICheckEpisodeUpdate): string {
-    // 使用Day.js解析输入日期
-    const inputDate = dayjs(date)
+    const firstDate = dayjs(firstEpisodeYYYYMMDDHHmm, 'YYYYMMDDHHmm')
+    const targetDate = dayjs(date)
 
-    // 使用Day.js解析第一集日期（保持输入格式的灵活性）
-    const firstDate = dayjs(firstEpisodeYYYYMMDDHHmm)
+    // 计算 targetDate 与 firstDate 相差的周数
+    const diffInWeeks = targetDate.startOf('day').diff(firstDate.startOf('day'), 'week')
 
-    // 计算输入日期与第一集日期之间的周数差（向下取整）
-    const weeksDiff = Math.floor(inputDate.diff(firstDate, 'day') / 7)
-
-    // 如果输入日期早于第一集或已超过总集数，返回空字符串
-    if (inputDate.isBefore(firstDate) || weeksDiff + 1 > totalEpisode) {
+    if (diffInWeeks < 0 || diffInWeeks >= totalEpisode) {
         return ''
     }
 
-    // 计算理论上的更新日期（第一集日期 + 周数差 * 7天）
-    const theoreticalUpdateDate = firstDate.add(weeksDiff * 7, 'day')
+    const expectedUpdateDate = firstDate.add(diffInWeeks, 'week')
 
-    // 如果输入日期与理论更新日期相同，则为更新日
-    if (inputDate.isSame(theoreticalUpdateDate, 'day')) {
-        return `第${weeksDiff + 1}集`
+    // 判断是否与某一集的更新时间相同（只比较年月日）
+    if (targetDate.isSame(expectedUpdateDate, 'day')) {
+        return `第${diffInWeeks + 1}集` // 集数从 1 开始
     }
 
-    // 非更新日返回空字符串
     return ''
 }
 

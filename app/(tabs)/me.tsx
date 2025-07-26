@@ -294,7 +294,10 @@ export default function ManagementCenter() {
                         ) : (
                             <View className="space-y-3">
                                 {events.map(event => (
-                                    <View key={event.id} className="flex-row items-start rounded-lg bg-gray-50 p-3">
+                                    <View
+                                        key={event.id}
+                                        className="mb-2 flex-row items-start rounded-lg bg-gray-50 p-3"
+                                    >
                                         <Checkbox
                                             state={selectedEvents.includes(event.id) ? 'checked' : 'unchecked'}
                                             onStateChange={state => handleEventSelect(event.id, state === 'checked')}

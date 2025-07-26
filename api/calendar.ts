@@ -68,6 +68,7 @@ export async function deleteCalendarByAnimeId(tx: TTx, animeId: number) {
  */
 export async function getCalendarByAnimeId(tx: TTx, animeId: number) {
     const result = await tx.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
+
     if (result.length === 0) {
         console.log('对应的日历事件不存在')
         return
