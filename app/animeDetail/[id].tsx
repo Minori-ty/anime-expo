@@ -16,7 +16,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { throttle } from 'lodash-es'
 import { CalendarClock, Clock, Hourglass } from 'lucide-react-native'
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import DateTimePicker, {
     type CalendarComponents,
     type CalendarDay,
@@ -56,6 +56,7 @@ function AnimeDetail() {
             updateTimeHHmm: '',
         },
         isLoading,
+        refetch,
     } = useQuery({
         queryKey: ['anime-detail', id],
         queryFn: () => handleGetAnimeById(Number(id)),
@@ -186,7 +187,18 @@ function AnimeDetail() {
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header */}
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <ScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={refetch}
+                        className="bg-blue-500 text-blue-500"
+                        colors={['#3b82f6']}
+                    />
+                }
+            >
                 <animeDetailContext.Provider
                     value={{
                         firstEpisodeYYYYMMDDHHmm: anime.firstEpisodeYYYYMMDDHHmm,

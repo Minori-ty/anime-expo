@@ -13,7 +13,7 @@ import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { throttle } from 'lodash-es'
 import React, { createContext, useCallback, useContext, useState } from 'react'
-import { Dimensions, FlatList, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Dimensions, FlatList, Pressable, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface ModalContextValue {
@@ -28,8 +28,8 @@ interface ModalContextValue {
     >
 }
 
+const GAP = 10
 const ModalContext = createContext<ModalContextValue | null>(null)
-
 const useModal = () => {
     const ctx = useContext(ModalContext)
     if (!ctx) throw new Error('useModal 没有用 ModalProvider 包裹')
@@ -44,7 +44,11 @@ export default function MyAnime() {
     })
     const router = useRouter()
 
-    const { data: list = [] } = useQuery({
+    const {
+        data: list = [],
+        refetch,
+        isLoading,
+    } = useQuery({
         queryKey: ['my-anime'],
         queryFn: getAnimeList,
     })
@@ -81,6 +85,32 @@ export default function MyAnime() {
 
         return () => throttledPush.cancel()
     }, [router])
+
+    interface IAnimeContainerProps {
+        list: TAnimeList
+    }
+    function AnimeContainer({ list }: IAnimeContainerProps) {
+        return (
+            <FlatList
+                data={list}
+                keyExtractor={item => item.id.toString()}
+                numColumns={3}
+                columnWrapperStyle={{ gap: GAP }}
+                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ gap: GAP, paddingHorizontal: GAP }}
+                renderItem={({ item }) => <AnimeContainerItem data={item} />}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={refetch}
+                        className="bg-blue-500 text-blue-500"
+                        colors={['#3b82f6']}
+                    />
+                }
+            />
+        )
+    }
 
     return (
         <ModalContext.Provider value={{ modalVisible, setModalVisible, animeData, setAnimeData }}>
@@ -132,25 +162,6 @@ function Empty() {
         <View className="flex-1 items-center justify-center">
             <Text>暂无动漫数据，请先到右上角添加动漫</Text>
         </View>
-    )
-}
-
-const GAP = 10
-interface IAnimeContainerProps {
-    list: TAnimeList
-}
-function AnimeContainer({ list }: IAnimeContainerProps) {
-    return (
-        <FlatList
-            data={list}
-            keyExtractor={item => item.id.toString()}
-            numColumns={3}
-            columnWrapperStyle={{ gap: GAP }}
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ gap: GAP, paddingHorizontal: GAP }}
-            renderItem={({ item }) => <AnimeContainerItem data={item} />}
-        />
     )
 }
 

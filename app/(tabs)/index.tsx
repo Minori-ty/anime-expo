@@ -1,5 +1,6 @@
 import { getScheduleList } from '@/api/schedule'
 import Empty from '@/components/lottie/Empty'
+import Loading from '@/components/lottie/Loading'
 import { EWeekday } from '@/enums'
 import { blurhash } from '@/styles'
 import type { TAnimeList } from '@/types'
@@ -13,7 +14,7 @@ import utc from 'dayjs/plugin/utc'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import React, { createContext, useContext, useState } from 'react'
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
 
@@ -24,6 +25,8 @@ dayjs.extend(utc)
 
 interface IScheduleContext {
     list: TAnimeList
+    isLoading: boolean
+    refetch: () => Promise<unknown>
 }
 
 const scheduleContext = createContext<IScheduleContext | null>(null)
@@ -51,16 +54,20 @@ const renderScene = SceneMap({
     [EWeekday.sunday]: () => <TabViewComponent updateWeekday={EWeekday.sunday} />,
 })
 export default function Index() {
-    const [index, setIndex] = useState<number>(EWeekday.monday)
+    const [index, setIndex] = useState<number>(dayjs().isoWeekday() - 1)
 
-    const { data: list = [] } = useQuery({
+    const {
+        data: list = [],
+        refetch,
+        isLoading,
+    } = useQuery({
         queryFn: getScheduleList,
         queryKey: ['schedule'],
     })
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-white">
-            <scheduleContext.Provider value={{ list }}>
+            <scheduleContext.Provider value={{ list, refetch, isLoading }}>
                 <TabView
                     navigationState={{ index, routes }}
                     renderScene={renderScene}
@@ -70,7 +77,7 @@ export default function Index() {
                         <TabBar
                             {...props}
                             scrollEnabled
-                            activeColor="#fb7299"
+                            activeColor="#3b82f6"
                             inactiveColor="#9E9E9E"
                             tabStyle={styles.tabBarTab}
                             style={styles.tabBar}
@@ -83,11 +90,26 @@ export default function Index() {
 }
 
 function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.valueType }) {
-    const { list } = useSchedule()
+    const { list, isLoading, refetch } = useSchedule()
     const animeList = list.filter(item => dayjs(item.firstEpisodeYYYYMMDDHHmm).isoWeekday() === updateWeekday)
 
     if (animeList.length === 0) {
-        return <Empty />
+        return (
+            <ScrollView
+                contentContainerClassName="items-center justfiy-center"
+                contentContainerStyle={styles.center}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={refetch}
+                        className="bg-blue-500 text-blue-500"
+                        colors={['#3b82f6']}
+                    />
+                }
+            >
+                {isLoading ? <Loading /> : <Empty />}
+            </ScrollView>
+        )
     }
 
     const mapSchedule: Record<string, TAnimeList> = {}
@@ -108,7 +130,18 @@ function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.va
     })
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}>
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            showsHorizontalScrollIndicator={false}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                    className="bg-blue-500 text-blue-500"
+                    colors={['#3b82f6']}
+                />
+            }
+        >
             {sortedTimes.map((time, index) => {
                 return <AnimeCardItem time={time} animeList={mapSchedule[time]} key={index} />
             })}
@@ -188,5 +221,10 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginRight: 10,
         height: 70 * 1.5,
+    },
+    center: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 1,
     },
 })

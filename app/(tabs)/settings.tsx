@@ -12,7 +12,7 @@ import dayjs from 'dayjs'
 import { differenceBy, throttle } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useState } from 'react'
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { z } from 'zod'
 
@@ -22,7 +22,11 @@ export default function Setting() {
     const [selectedAnimeIdList, setSelectedAnimeIdList] = useState<number[]>([])
     const [selectedJsonFileList, setSelectedJsonFileList] = useState<string[]>([])
 
-    const { data: calendarList = [] } = useQuery({
+    const {
+        data: calendarList = [],
+        refetch,
+        isLoading,
+    } = useQuery({
         queryKey: ['settings-calendar'],
         queryFn: getCalendarWithAnimeList,
     })
@@ -344,7 +348,17 @@ export default function Setting() {
     }
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-gray-50">
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={refetch}
+                        className="bg-blue-500 text-blue-500"
+                        colors={['#3b82f6']}
+                    />
+                }
+            >
                 <View className="p-4">
                     {/* 标题 */}
                     <PageHeader title="数据管理" leading={<Icon size={24} name="Settings" />}></PageHeader>
