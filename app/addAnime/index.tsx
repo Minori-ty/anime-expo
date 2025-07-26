@@ -11,12 +11,12 @@ import React, { useLayoutEffect } from 'react'
 import { type SubmitHandler } from 'react-hook-form'
 
 const formData = {
-    name: 'asf',
+    name: '',
     updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-    totalEpisode: 5,
+    totalEpisode: 0,
     status: EStatus.serializing,
-    cover: 'https://pics4.baidu.com/feed/77094b36acaf2edd67093ad9d7fb12f938019305.jpeg@f_auto?token=dd785ba4307a2c24b9b4c58105475fd4',
-    currentEpisode: 3,
+    cover: '',
+    currentEpisode: 0,
     updateWeekday: EWeekday.monday,
     firstEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
 }

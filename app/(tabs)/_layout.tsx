@@ -5,13 +5,14 @@ import { Platform } from 'react-native'
 import { HapticTab } from '@/components/HapticTab'
 import Icon from '@/components/ui/Icon'
 import TabBarBackground from '@/components/ui/TabBarBackground'
+import { themeColorPurple } from '@/styles'
 import { cn } from '@/utils/nativewind'
 
 export default function TabLayout() {
     return (
         <Tabs
             screenOptions={{
-                tabBarActiveTintColor: '#3b82f6',
+                tabBarActiveTintColor: themeColorPurple,
                 headerShown: false,
                 tabBarButton: HapticTab,
                 tabBarBackground: TabBarBackground,
@@ -29,7 +30,7 @@ export default function TabLayout() {
                 options={{
                     title: '更新表',
                     tabBarIcon: ({ color, focused }) => (
-                        <Icon name="CalendarClock" className={cn('text-gray-500', focused && 'text-blue-500')} />
+                        <Icon name="CalendarClock" className={cn('text-gray-500', focused && 'text-theme')} />
                     ),
                 }}
             />
@@ -38,7 +39,7 @@ export default function TabLayout() {
                 options={{
                     title: '我的追番',
                     tabBarIcon: ({ color, focused }) => (
-                        <Icon name="Heart" className={cn('text-gray-500', focused && 'text-blue-500')} />
+                        <Icon name="Heart" className={cn('text-gray-500', focused && 'text-theme')} />
                     ),
                 }}
             />
@@ -47,7 +48,7 @@ export default function TabLayout() {
                 options={{
                     title: '数据管理',
                     tabBarIcon: ({ color, focused }) => (
-                        <Icon name="Settings" className={cn('text-gray-500', focused && 'text-blue-500')} />
+                        <Icon name="Settings" className={cn('text-gray-500', focused && 'text-theme')} />
                     ),
                 }}
             />

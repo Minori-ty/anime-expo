@@ -2,8 +2,9 @@ import { getScheduleList } from '@/api/schedule'
 import Empty from '@/components/lottie/Empty'
 import Loading from '@/components/lottie/Loading'
 import { EWeekday } from '@/enums'
-import { blurhash } from '@/styles'
+import { blurhash, themeColorPurple } from '@/styles'
 import type { TAnimeList } from '@/types'
+import { queryClient } from '@/utils/react-query'
 import { isCurrentWeekdayUpdateTimePassed } from '@/utils/time'
 import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
@@ -25,8 +26,6 @@ dayjs.extend(utc)
 
 interface IScheduleContext {
     list: TAnimeList
-    isLoading: boolean
-    refetch: () => Promise<unknown>
 }
 
 const scheduleContext = createContext<IScheduleContext | null>(null)
@@ -56,18 +55,14 @@ const renderScene = SceneMap({
 export default function Index() {
     const [index, setIndex] = useState<number>(dayjs().isoWeekday() - 1)
 
-    const {
-        data: list = [],
-        refetch,
-        isLoading,
-    } = useQuery({
+    const { data: list = [] } = useQuery({
         queryFn: getScheduleList,
         queryKey: ['schedule'],
     })
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-white">
-            <scheduleContext.Provider value={{ list, refetch, isLoading }}>
+            <scheduleContext.Provider value={{ list }}>
                 <TabView
                     navigationState={{ index, routes }}
                     renderScene={renderScene}
@@ -77,7 +72,7 @@ export default function Index() {
                         <TabBar
                             {...props}
                             scrollEnabled
-                            activeColor="#3b82f6"
+                            activeColor={themeColorPurple}
                             inactiveColor="#9E9E9E"
                             tabStyle={styles.tabBarTab}
                             style={styles.tabBar}
@@ -90,20 +85,24 @@ export default function Index() {
 }
 
 function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.valueType }) {
-    const { list, isLoading, refetch } = useSchedule()
+    const { list } = useSchedule()
     const animeList = list.filter(item => dayjs(item.firstEpisodeYYYYMMDDHHmm).isoWeekday() === updateWeekday)
+    const queryState = queryClient.getQueryState(['my-anime'])
 
+    const isLoading = queryState?.fetchStatus === 'fetching'
+    function refetch() {
+        queryClient.invalidateQueries({ queryKey: ['my-anime'] })
+    }
     if (animeList.length === 0) {
         return (
             <ScrollView
-                contentContainerClassName="items-center justfiy-center"
                 contentContainerStyle={styles.center}
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoading}
                         onRefresh={refetch}
-                        className="bg-blue-500 text-blue-500"
-                        colors={['#3b82f6']}
+                        className="text-theme"
+                        colors={[themeColorPurple]}
                     />
                 }
             >
@@ -137,8 +136,8 @@ function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.va
                 <RefreshControl
                     refreshing={isLoading}
                     onRefresh={refetch}
-                    className="bg-blue-500 text-blue-500"
-                    colors={['#3b82f6']}
+                    className="text-theme"
+                    colors={[themeColorPurple]}
                 />
             }
         >

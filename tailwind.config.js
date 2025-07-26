@@ -5,8 +5,8 @@ module.exports = {
     presets: [require('nativewind/preset')],
     theme: {
         extend: {
-            borderWidth: {
-                1: 1,
+            colors: {
+                theme: '#6c5ce7',
             },
         },
     },

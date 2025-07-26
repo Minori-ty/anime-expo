@@ -4,7 +4,7 @@ import Loading from '@/components/lottie/Loading'
 import Icon from '@/components/ui/Icon'
 import { IconSymbol } from '@/components/ui/IconSymbol'
 import { EStatus, EWeekday } from '@/enums'
-import { blurhash } from '@/styles'
+import { blurhash, themeColorPurple } from '@/styles'
 import { cn } from '@/utils/nativewind'
 import { queryClient } from '@/utils/react-query'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -14,7 +14,6 @@ import 'dayjs/locale/zh-cn'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { throttle } from 'lodash-es'
-import { CalendarClock, Clock, Hourglass } from 'lucide-react-native'
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import DateTimePicker, {
@@ -56,7 +55,6 @@ function AnimeDetail() {
             updateTimeHHmm: '',
         },
         isLoading,
-        refetch,
     } = useQuery({
         queryKey: ['anime-detail', id],
         queryFn: () => handleGetAnimeById(Number(id)),
@@ -121,9 +119,7 @@ function AnimeDetail() {
                     queryKey: ['settings-calendar'],
                 })
             },
-            onError: err => {
-                alert(err)
-            },
+            onError: err => {},
         })
 
     /** 删除订阅 */
@@ -157,9 +153,10 @@ function AnimeDetail() {
 
     const defaultStyles = useDefaultStyles()
 
-    const { data: calendar = false } = useQuery({
+    const { data: calendar = false, isLoading: isGetCalendarLoading } = useQuery({
         queryKey: ['anime-calendar', id],
         queryFn: () => hasCalendar(Number(id)),
+        refetchOnWindowFocus: true,
     })
 
     if (isLoading || !anime) {
@@ -193,9 +190,16 @@ function AnimeDetail() {
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoading}
-                        onRefresh={refetch}
-                        className="bg-blue-500 text-blue-500"
-                        colors={['#3b82f6']}
+                        onRefresh={() => {
+                            queryClient.invalidateQueries({
+                                queryKey: ['anime-calendar', id],
+                            })
+                            queryClient.invalidateQueries({
+                                queryKey: ['anime-detail', id],
+                            })
+                        }}
+                        className="text-theme"
+                        colors={[themeColorPurple]}
                     />
                 }
             >
@@ -281,7 +285,7 @@ function AnimeDetail() {
                         <View className="space-y-4">
                             <View className="flex-row items-center rounded-xl bg-blue-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-blue-500">
-                                    <CalendarClock size={14} color="#fff" />
+                                    <Icon name="CalendarClock" size={14} className="text-white" />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="font-medium text-gray-900">每周更新</Text>
@@ -294,7 +298,7 @@ function AnimeDetail() {
 
                             <View className="my-3 flex-row items-center rounded-xl bg-green-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-green-500">
-                                    <Clock size={14} color="#fff" />
+                                    <Icon name="Clock" size={14} className="text-white" />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="font-medium text-gray-900">首播时间</Text>
@@ -304,7 +308,7 @@ function AnimeDetail() {
 
                             <View className="flex-row items-center rounded-xl bg-orange-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-orange-500">
-                                    <Hourglass size={14} color="#fff" />
+                                    <Icon name="CalendarCheck" size={14} className="text-white" />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="font-medium text-gray-900">完结时间</Text>
@@ -318,7 +322,10 @@ function AnimeDetail() {
                     {!calendar && (
                         <View className="mt-2 bg-white p-6">
                             <TouchableOpacity
-                                className="mt-3 flex-row items-center justify-center rounded-xl bg-green-500 py-4"
+                                className={cn(
+                                    'mt-3 flex-row items-center justify-center rounded-xl bg-green-500 py-4',
+                                    isGetCalendarLoading && 'bg-gray-400'
+                                )}
                                 activeOpacity={0.5}
                                 onPress={handleSubscribe}
                                 disabled={isHandleCreateAndBindCalendarMutionLoading}
@@ -332,7 +339,10 @@ function AnimeDetail() {
                     {calendar && (
                         <View className="mt-2 bg-white p-6">
                             <TouchableOpacity
-                                className="mt-3 flex-row items-center justify-center rounded-xl bg-red-500 py-4"
+                                className={cn(
+                                    'mt-3 flex-row items-center justify-center rounded-xl bg-red-500 py-4',
+                                    isGetCalendarLoading && 'bg-gray-400'
+                                )}
                                 activeOpacity={0.5}
                                 onPress={handleUnsubscribe}
                                 disabled={isHandleClearCalendarByAnimeIdMutionLoading}
@@ -397,7 +407,7 @@ function Day({ day }: { day: CalendarDay }) {
                     'font-archivo text-foreground top-2',
                     !isCurrentMonth && 'text-gray-200',
                     isSelected && isToday && 'text-white',
-                    !isSelected && isToday && 'text-blue-500'
+                    !isSelected && isToday && 'text-theme'
                 )}
             >
                 {day.text}
@@ -410,7 +420,7 @@ function Day({ day }: { day: CalendarDay }) {
                             'font-archivo text-foreground text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
-                            !isSelected && isToday && 'text-blue-500'
+                            !isSelected && isToday && 'text-theme'
                         )}
                     >
                         {episode}

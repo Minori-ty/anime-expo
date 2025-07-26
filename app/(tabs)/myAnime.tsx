@@ -1,10 +1,11 @@
 import { getAnimeList, handleDeleteAnime } from '@/api'
 import CustomModal from '@/components/CustomModal'
+import Loading from '@/components/lottie/Loading'
 import PageHeader from '@/components/PageHeader'
 import Icon from '@/components/ui/Icon'
 import { IconSymbol } from '@/components/ui/IconSymbol'
 import { EStatus } from '@/enums'
-import { blurhash } from '@/styles'
+import { blurhash, themeColorPurple } from '@/styles'
 import { TAnimeList } from '@/types'
 import { cn } from '@/utils/nativewind'
 import { queryClient } from '@/utils/react-query'
@@ -13,7 +14,17 @@ import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { throttle } from 'lodash-es'
 import React, { createContext, useCallback, useContext, useState } from 'react'
-import { Dimensions, FlatList, Pressable, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import {
+    Dimensions,
+    FlatList,
+    Pressable,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface ModalContextValue {
@@ -104,8 +115,8 @@ export default function MyAnime() {
                     <RefreshControl
                         refreshing={isLoading}
                         onRefresh={refetch}
-                        className="bg-blue-500 text-blue-500"
-                        colors={['#3b82f6']}
+                        className="text-theme"
+                        colors={[themeColorPurple]}
                     />
                 }
             />
@@ -130,7 +141,7 @@ export default function MyAnime() {
             <CustomModal visible={modalVisible} onClose={() => setModalVisible(false)}>
                 <View pointerEvents="box-none" className="w-80 rounded-3xl bg-white px-5 pb-9 pt-8">
                     <View>
-                        <Text className="mb-4 text-xl">确认删除</Text>
+                        <Text className="mb-4 text-xl font-bold">确认删除</Text>
                         <Text className="text-sm">你确定要删除 &quot;{animeData.name}&quot; 吗？</Text>
                     </View>
                     <View className="mt-5 flex-row justify-end">
@@ -139,7 +150,7 @@ export default function MyAnime() {
                                 onPress={() => setModalVisible(false)}
                                 className="h-7 w-16 items-center justify-center"
                             >
-                                <Text className="text-base text-[#6c5ce7]">取消</Text>
+                                <Text className="text-theme text-base">取消</Text>
                             </Pressable>
                         </View>
                         <View>
@@ -147,7 +158,7 @@ export default function MyAnime() {
                                 onPress={() => deleteAnimeMutation()}
                                 className="h-7 w-16 items-center justify-center"
                             >
-                                <Text className="text-base text-[#6c5ce7]">删除</Text>
+                                <Text className="text-theme text-base">删除</Text>
                             </Pressable>
                         </View>
                     </View>
@@ -158,13 +169,28 @@ export default function MyAnime() {
 }
 
 function Empty() {
+    const queryState = queryClient.getQueryState(['my-anime'])
+
+    const isLoading = queryState?.fetchStatus === 'fetching'
+    function refetch() {
+        queryClient.invalidateQueries({ queryKey: ['my-anime'] })
+    }
     return (
-        <View className="flex-1 items-center justify-center">
-            <Text>暂无动漫数据，请先到右上角添加动漫</Text>
-        </View>
+        <ScrollView
+            contentContainerStyle={styles.center}
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={refetch}
+                    className="text-theme"
+                    colors={[themeColorPurple]}
+                />
+            }
+        >
+            {isLoading ? <Loading /> : <Text>暂无动漫数据，请先到右上角添加动漫</Text>}
+        </ScrollView>
     )
 }
-
 interface IAnimeContainerItemProps {
     data: TAnimeList[number]
 }
@@ -224,5 +250,10 @@ const styles = StyleSheet.create({
     image: {
         width: (Dimensions.get('window').width - GAP * 4) / 3,
         height: ((Dimensions.get('window').width - GAP * 4) / 3) * 1.5,
+    },
+    center: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 1,
     },
 })

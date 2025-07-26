@@ -1,8 +1,3 @@
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
-import { useFonts } from 'expo-font'
-import { Stack } from 'expo-router'
-import 'react-native-reanimated'
-
 import { refreshScheduleAndCalendar, registerBackgroundTask, taskDefined } from '@/backgroundTasks'
 import Error from '@/components/lottie/Error'
 import Loading from '@/components/lottie/Loading'
@@ -12,15 +7,20 @@ import { getCalendarPermission, getNotificationPermission } from '@/permissions'
 import '@/styles/global.css'
 import { queryClient } from '@/utils/react-query'
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
+import { useFonts } from 'expo-font'
 import * as Notifications from 'expo-notifications'
+import { Stack } from 'expo-router'
 import { startTransition, useEffect } from 'react'
 import { Text } from 'react-native'
 import ErrorBoundary from 'react-native-error-boundary'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
+import 'react-native-reanimated'
+import Toast from 'react-native-toast-message'
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -75,6 +75,7 @@ export default function RootLayout() {
                                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                                     <Stack.Screen name="+not-found" />
                                 </Stack>
+                                <Toast />
                                 {/* <StatusBar style="auto" /> */}
                             </ThemeProvider>
                         </BottomSheetModalProvider>

@@ -13,7 +13,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import type { DeepExpand } from 'types-tools'
 import { RadioGroup } from './RadioGroup'
 import { TFormSchema, formSchema } from './schema'
-import { IconSymbol } from './ui/IconSymbol'
+import Icon from './ui/Icon'
 
 interface IBaseFormData {
     name: string
@@ -70,6 +70,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         handleSubmit,
         formState: { errors },
         watch,
+        trigger,
     } = useForm<TFormSchema>({
         mode: 'all',
         resolver: zodResolver(formSchema),
@@ -104,6 +105,11 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         'updateTimeHHmm',
         'updateWeekday',
     ])
+
+    useEffect(() => {
+        trigger(['currentEpisode', 'totalEpisode'])
+    }, [trigger, totalEpisode, currentEpisode])
+
     const onSubmit: SubmitHandler<TFormSchema> = async data => {
         submit(data)
     }
@@ -127,24 +133,33 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
         }
     }, [status, currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday])
 
+    const removeLeadingZeros = (str: string) => {
+        // 若字符串为空或全为0，返回0
+        if (/^0+$/.test(str)) return '0'
+        // 否则移除前导零
+        return str.replace(/^0+/, '')
+    }
+
     return (
         <KeyboardAwareScrollView bottomOffset={100} showsVerticalScrollIndicator={false} className="bg-white px-4 pt-5">
             <FormItem label="番剧名称" error={fullErrors.name}>
                 <Controller
                     control={control}
                     name="name"
-                    render={({ field }) => (
-                        <TextInput
-                            {...field}
-                            className={cn(
-                                'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
-                                fullErrors.name && 'border-red-500'
-                            )}
-                            placeholder="请输入番剧名称"
-                            onChangeText={field.onChange}
-                            value={field.value}
-                        />
-                    )}
+                    render={({ field }) => {
+                        return (
+                            <TextInput
+                                {...field}
+                                className={cn(
+                                    'h-10 rounded-md border border-[#ccc] p-0 pl-2 pt-1 text-start text-base leading-7',
+                                    fullErrors && fullErrors.name && 'border-red-500'
+                                )}
+                                placeholder="请输入番剧名称"
+                                onChangeText={field.onChange}
+                                value={field.value}
+                            />
+                        )
+                    }}
                 />
             </FormItem>
             <FormItem label="更新状态" error={fullErrors.status}>
@@ -172,24 +187,29 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             <TouchableOpacity
                                 activeOpacity={0.5}
                                 className={cn(
-                                    'h-10 flex-row items-center rounded-md border border-[#ccc] pl-3',
+                                    'h-10 flex-row items-center gap-3 rounded-md border border-[#ccc] pl-3',
                                     fullErrors.firstEpisodeYYYYMMDDHHmm && 'border-red-500'
                                 )}
                                 onPress={() => datepickerRef.current?.open()}
                             >
-                                <IconSymbol size={20} name="calendar" color={'#1f1f1f'} />
-                                <Text className="ml-3 text-lg">{field.value}</Text>
+                                <Icon name="CalendarClock" size={22} />
+                                <Text className="text-lg">{field.value}</Text>
                             </TouchableOpacity>
                         )}
                     />
                 </FormItem>
             )}
             {status !== EStatus.serializing && (
-                <FormItem label="最后时间" error={undefined}>
+                <FormItem label="完结时间" error={undefined}>
                     <Controller
                         control={control}
                         name="firstEpisodeYYYYMMDDHHmm"
-                        render={() => <Text className="text-lg">{getLastEpisodeDateTime}</Text>}
+                        render={() => (
+                            <View className="h-10 flex-row items-center gap-3 rounded-md border border-[#ccc] bg-gray-100 pl-3">
+                                <Icon name="CalendarCheck" size={22} className="text-gray-400" />
+                                <Text className="text-lg text-gray-400">{getLastEpisodeDateTime}</Text>
+                            </View>
+                        )}
                     />
                 </FormItem>
             )}
@@ -228,7 +248,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                 )}
                                 onPress={() => timepickerRef.current?.open()}
                             >
-                                <IconSymbol size={20} name="calendar" color={'#1f1f1f'} />
+                                <Icon name="Clock" size={22} />
                                 <Text className="ml-3 text-lg">{dayjs(field.value).format('HH:mm')}</Text>
                             </TouchableOpacity>
                         )}
@@ -249,11 +269,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                 )}
                                 placeholder="请输入当前更新集数"
                                 onChangeText={text => {
-                                    if (text === '') {
-                                        field.onChange(text)
-                                    } else {
-                                        field.onChange(parseInt(text))
-                                    }
+                                    field.onChange(removeLeadingZeros(text.replace(/[^0-9]/g, '')))
                                 }}
                                 keyboardType="numeric"
                                 value={field.value?.toString() || ''}
@@ -275,11 +291,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                             )}
                             placeholder="请输入总集数"
                             onChangeText={text => {
-                                if (text === '') {
-                                    field.onChange(text)
-                                } else {
-                                    field.onChange(parseInt(text))
-                                }
+                                field.onChange(removeLeadingZeros(text.replace(/[^0-9]/g, '')))
                             }}
                             keyboardType="numeric"
                             value={field.value?.toString() || ''}

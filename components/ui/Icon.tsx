@@ -1,4 +1,4 @@
-import { Bell, BellOff, CalendarClock, Heart, Settings } from 'lucide-react-native'
+import { Bell, BellOff, CalendarCheck, CalendarClock, Clock, Heart, Hourglass, Settings } from 'lucide-react-native'
 import { cssInterop } from 'nativewind'
 import { memo, useMemo } from 'react'
 
@@ -11,6 +11,9 @@ const iconMap = {
     Settings,
     BellOff,
     Bell,
+    CalendarCheck,
+    Clock,
+    Hourglass,
 } as const
 
 const Icon: React.FC<IconProps> = memo(({ name, className, size = 26 }) => {
