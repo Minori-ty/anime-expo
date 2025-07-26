@@ -35,6 +35,8 @@ const config = {
                 'IGNORE_BATTERY_OPTIMIZATION',
                 'READ_CALENDAR',
                 'WRITE_CALENDAR',
+                'WRITE_EXTERNAL_STORAGE', // 写入存储权限（Android 10及以下需要）
+                'MANAGE_EXTERNAL_STORAGE', // Android 11+ 需要的所有文件访问权限（可选）
             ],
         },
         web: {

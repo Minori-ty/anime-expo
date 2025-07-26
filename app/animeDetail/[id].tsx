@@ -12,6 +12,7 @@ import 'dayjs/locale/zh-cn'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { throttle } from 'lodash-es'
+import { CalendarClock, Clock, Hourglass } from 'lucide-react-native'
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import DateTimePicker, {
@@ -206,20 +207,20 @@ function AnimeDetail() {
                         <View className="space-y-4">
                             <View className="flex-row items-center rounded-xl bg-blue-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-blue-500">
-                                    <Text className="text-sm text-white">📅</Text>
+                                    <CalendarClock size={14} color="#fff" />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="font-medium text-gray-900">每周更新</Text>
                                     <Text className="text-sm text-gray-600">
                                         {EWeekday.raw(anime.updateWeekday).label}{' '}
-                                        {dayjs(anime.updateTimeHHmm).format('HH:mm')}
+                                        {dayjs(anime.firstEpisodeYYYYMMDDHHmm).format('HH:mm')}
                                     </Text>
                                 </View>
                             </View>
 
                             <View className="my-3 flex-row items-center rounded-xl bg-green-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-green-500">
-                                    <Text className="text-sm text-white">🎬</Text>
+                                    <Clock size={14} color="#fff" />
                                 </View>
                                 <View className="flex-1">
                                     <Text className="font-medium text-gray-900">首播时间</Text>
@@ -229,10 +230,10 @@ function AnimeDetail() {
 
                             <View className="flex-row items-center rounded-xl bg-orange-50 px-4 py-3">
                                 <View className="mr-3 size-8 items-center justify-center rounded-full bg-orange-500">
-                                    <Text className="text-sm text-white">🆕</Text>
+                                    <Hourglass size={14} color="#fff" />
                                 </View>
                                 <View className="flex-1">
-                                    <Text className="font-medium text-gray-900">结局时间</Text>
+                                    <Text className="font-medium text-gray-900">完结时间</Text>
                                     <Text className="text-sm text-gray-600">{anime.lastEpisodeYYYYMMDDHHmm}</Text>
                                 </View>
                             </View>
@@ -287,11 +288,11 @@ export default AnimeDetail
 
 function Day({ day }: { day: CalendarDay }) {
     const { isSelected, isCurrentMonth } = day
-    const { totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm } = useAnimeDetailContext()
+    const { totalEpisode, firstEpisodeYYYYMMDDHHmm } = useAnimeDetailContext()
 
     const episode = useMemo(() => {
-        return checkEpisodeUpdate({ date: day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm })
-    }, [day.date, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm])
+        return checkEpisodeUpdate({ date: day.date, totalEpisode, firstEpisodeYYYYMMDDHHmm })
+    }, [day.date, totalEpisode, firstEpisodeYYYYMMDDHHmm])
 
     return (
         <View className="items-center">
@@ -324,16 +325,10 @@ function Day({ day }: { day: CalendarDay }) {
 
 interface ICheckEpisodeUpdate {
     firstEpisodeYYYYMMDDHHmm: string
-    currentEpisode: number
     totalEpisode: number
     date: string
 }
-function checkEpisodeUpdate({
-    date,
-    firstEpisodeYYYYMMDDHHmm,
-    currentEpisode,
-    totalEpisode,
-}: ICheckEpisodeUpdate): string {
+function checkEpisodeUpdate({ date, firstEpisodeYYYYMMDDHHmm, totalEpisode }: ICheckEpisodeUpdate): string {
     // 使用Day.js解析输入日期
     const inputDate = dayjs(date)
 

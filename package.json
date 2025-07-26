@@ -69,7 +69,8 @@
     "react-native-ui-datepicker": "^3.1.2",
     "react-native-web": "^0.20.0",
     "tailwind-merge": "^3.3.1",
-    "zod": "^3.25.67"
+    "zod": "^3.25.67",
+    "expo-file-system": "~18.1.11"
   },
   "devDependencies": {
     "@babel/core": "^7.27.7",

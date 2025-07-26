@@ -1,9 +1,8 @@
-'use client'
-
 import Checkbox from '@/components/Checkbox'
 import { useAnimeEvents } from '@/hooks/useAnimeEvents'
 import { useFileManager } from '@/hooks/useFileManager'
 import type { AppData } from '@/types'
+import { saveJsonToPublicDirectory } from '@/utils/fileSave'
 import { Calendar, Clock, Download, FileText, Settings, Trash2, Upload } from 'lucide-react-native'
 import { useState } from 'react'
 import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native'
@@ -77,6 +76,8 @@ export default function ManagementCenter() {
             }
 
             const exportedFile = await exportData(appData)
+            const data = { foo: 'bar', count: 42 }
+            await saveJsonToPublicDirectory('app_data.json', data)
             Alert.alert('导出成功', `数据已导出为 ${exportedFile.name}`)
         } catch {
             Alert.alert('导出失败', '请稍后重试')
@@ -185,7 +186,7 @@ export default function ManagementCenter() {
 
                     {/* 本地文件管理 */}
                     <View className="mb-6 rounded-lg bg-white p-4 shadow-sm">
-                        <View className="mb-4 flex-row items-center justify-between">
+                        <View className="mb-4 h-10 flex-row items-center justify-between">
                             <View className="flex-row items-center">
                                 <FileText size={20} color="#374151" />
                                 <Text className="ml-2 text-lg font-semibold text-gray-900">本地文件</Text>
@@ -259,7 +260,7 @@ export default function ManagementCenter() {
 
                     {/* 日历事件管理 */}
                     <View className="rounded-lg bg-white p-4 shadow-sm">
-                        <View className="mb-4 flex-row items-center justify-between">
+                        <View className="mb-4 h-10 flex-row items-center justify-between">
                             <View className="flex-row items-center">
                                 <Calendar size={20} color="#374151" />
                                 <Text className="ml-2 text-lg font-semibold text-gray-900">动漫日历事件</Text>
