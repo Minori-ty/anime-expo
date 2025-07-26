@@ -81,6 +81,9 @@ function AnimeDetail() {
             queryClient.invalidateQueries({
                 queryKey: ['anime-calendar', id],
             })
+            queryClient.invalidateQueries({
+                queryKey: ['settings'],
+            })
         },
         onError: err => {
             alert(err)
@@ -107,6 +110,9 @@ function AnimeDetail() {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ['anime-calendar', id],
+            })
+            queryClient.invalidateQueries({
+                queryKey: ['settings'],
             })
         },
         onError: err => {

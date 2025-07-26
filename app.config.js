@@ -102,6 +102,12 @@ const config = {
                 },
             ],
             'expo-image-picker',
+            [
+                'expo-document-picker',
+                {
+                    iCloudContainerEnvironment: 'Production',
+                },
+            ],
         ],
         experiments: {
             typedRoutes: true,

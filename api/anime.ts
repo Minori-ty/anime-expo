@@ -20,8 +20,9 @@ export interface IAddAnimeData {
  * @param data
  * @returns
  */
-export async function addAnime(tx: TTx, data: IAddAnimeData) {
-    const result = await tx.insert(animeTable).values(data).returning()
+export async function addAnime(tx: TTx, data: IAddAnimeData | IAddAnimeData[]) {
+    const values = Array.isArray(data) ? data : [data]
+    const result = await tx.insert(animeTable).values(values).returning()
     if (result.length === 0) {
         console.log('添加动漫失败')
         return

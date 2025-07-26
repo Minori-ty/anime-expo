@@ -2,7 +2,7 @@ import { db } from '@/db'
 import { animeTable, calendarTable } from '@/db/schema'
 import { TTx } from '@/types'
 import { createCalendarEvent, deleteCalendarEvent, getCalendarEventByEventId } from '@/utils/calendar'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { IAddAnimeData } from './anime'
 
 /**
@@ -57,6 +57,16 @@ export async function deleteCalendarByAnimeId(tx: TTx, animeId: number) {
         return
     }
     await tx.delete(calendarTable).where(eq(calendarTable.animeId, animeId))
+    console.log('删除日历表数据成功')
+}
+
+/**
+ * 根据动漫id列表删除日历事件表数据
+ * @param tx
+ * @param animeIdList
+ */
+export async function deleteCalendarByAnimeIdList(tx: TTx, animeIdList: number[]) {
+    await tx.delete(calendarTable).where(inArray(calendarTable.animeId, animeIdList))
     console.log('删除日历表数据成功')
 }
 
@@ -118,13 +128,9 @@ export async function getCalendarWithAnimeList() {
  * @returns
  */
 export async function hasCalendar(animeId: number) {
-    const result = await db.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
-    if (result.length === 0) {
-        console.log('对应的日历事件不存在')
-        return false
-    }
-    const eventId = result[0].calendarId
-    return await getCalendarEventByEventId(eventId)
+    return await db.transaction(async tx => {
+        return await getCalendarByAnimeId(tx, animeId)
+    })
 }
 
 /**
@@ -179,8 +185,22 @@ export function handleCreateAndBindCalendar(data: IHandleCreateAndBindCalendar) 
  * @param animeId
  * @returns
  */
-export function handleClearCalendarByAnimeId(animeId: number) {
-    return db.transaction(async tx => {
+export async function handleClearCalendarByAnimeId(animeId: number) {
+    return await db.transaction(async tx => {
         await clearCalendarByAnimeId(tx, animeId)
+    })
+}
+
+/**
+ * 批量删除日历事件及其关联表
+ * @param animeIdList
+ * @returns
+ */
+export async function handleCalendarByAnimeIdList(animeIdList: number[]) {
+    return await db.transaction(async tx => {
+        await deleteCalendarByAnimeIdList(tx, animeIdList)
+        for (const animeId of animeIdList) {
+            await deleteCalendarByAnimeId(tx, animeId)
+        }
     })
 }

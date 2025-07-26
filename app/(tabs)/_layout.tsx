@@ -38,7 +38,7 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="me"
+                name="settings"
                 options={{
                     title: '我的',
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="bookmark.fill" color={color} />,
