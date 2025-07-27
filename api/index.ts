@@ -5,6 +5,7 @@ import {
     getLastEpisodeTimestamp,
     getMondayTimestampInThisWeek,
     getStatus,
+    isCurrentWeekdayUpdateTimePassed,
     willUpdateThisWeek,
 } from '@/utils/time'
 import dayjs from 'dayjs'
@@ -205,7 +206,11 @@ export async function updateToBeUpdatedTable() {
                 const shouldEpisodeNum = calcEpisodeThisWeek(firstEpisodeTimestamp)
                 await handleAddSchedule(tx, id, {
                     name,
-                    currentEpisode: shouldEpisodeNum,
+                    currentEpisode: isCurrentWeekdayUpdateTimePassed(
+                        dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
+                    )
+                        ? shouldEpisodeNum
+                        : shouldEpisodeNum - 1,
                     totalEpisode,
                     cover,
                     firstEpisodeTimestamp,
