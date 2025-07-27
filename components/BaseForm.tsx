@@ -41,16 +41,7 @@ export type TFormData = DeepExpand<TSerializingForm> | DeepExpand<TCompletedForm
 
 export interface IBaseAnimeFormProps {
     onSubmit: SubmitHandler<TFormSchema>
-    formData: {
-        name: string
-        updateTimeHHmm: string
-        totalEpisode: number
-        status: typeof EStatus.valueType
-        cover: string
-        currentEpisode: number
-        updateWeekday: typeof EWeekday.valueType | ''
-        firstEpisodeYYYYMMDDHHmm: string
-    }
+    formData: TFormSchema
 }
 
 export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormProps) {
@@ -198,7 +189,9 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                                 onPress={() => datepickerRef.current?.open()}
                             >
                                 <Icon name="CalendarClock" size={22} />
-                                <Text className="text-lg">{field.value}</Text>
+                                <Text className={cn('text-lg', field.value ?? 'text-gray-400')}>
+                                    {field.value ?? '请选择日期'}
+                                </Text>
                             </TouchableOpacity>
                         )}
                     />

@@ -21,11 +21,11 @@ const statusSchema = z.discriminatedUnion('status', [
     }),
     z.object({
         status: z.literal(EStatus.completed),
-        firstEpisodeYYYYMMDDHHmm: z.string(),
+        firstEpisodeYYYYMMDDHHmm: z.string().min(1, '请选择日期'),
     }),
     z.object({
         status: z.literal(EStatus.toBeUpdated),
-        firstEpisodeYYYYMMDDHHmm: z.string(),
+        firstEpisodeYYYYMMDDHHmm: z.string().min(1, '请选择日期'),
     }),
 ])
 const formSchema = z
@@ -70,7 +70,13 @@ const formSchema = z
         if (val.status === EStatus.completed) {
             const { totalEpisode, firstEpisodeYYYYMMDDHHmm } = val
             const firstEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
-
+            if (firstEpisodeYYYYMMDDHHmm === undefined) {
+                ctx.addIssue({
+                    code: ZodIssueCode.custom,
+                    path: ['firstEpisodeYYYYMMDDHHmm'],
+                    message: '请选择日期',
+                })
+            }
             if (firstEpisodeTimestamp > dayjs().unix()) {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,
@@ -93,6 +99,16 @@ const formSchema = z
             const { firstEpisodeYYYYMMDDHHmm, totalEpisode } = val
             const firstEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
             const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
+            console.log(firstEpisodeYYYYMMDDHHmm)
+
+            if (firstEpisodeYYYYMMDDHHmm === undefined) {
+                ctx.addIssue({
+                    code: ZodIssueCode.custom,
+                    path: ['firstEpisodeYYYYMMDDHHmm'],
+                    message: '请选择日期',
+                })
+            }
+
             if (firstEpisodeTimestamp < dayjs().unix() && lastEpisodeTimestamp > dayjs().unix()) {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,
@@ -113,13 +129,13 @@ const formSchema = z
 type TFormSchema = z.infer<typeof formSchema>
 
 const formDefaultValues: TFormSchema = {
-    name: 'asf',
+    name: '',
     updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-    totalEpisode: 5,
+    totalEpisode: 0,
     status: EStatus.serializing,
-    cover: 'https://pics4.baidu.com/feed/77094b36acaf2edd67093ad9d7fb12f938019305.jpeg@f_auto?token=dd785ba4307a2c24b9b4c58105475fd4',
-    currentEpisode: 3,
-    updateWeekday: EWeekday.monday,
+    cover: '',
+    currentEpisode: 0,
+    updateWeekday: '',
 }
 
 export { formDefaultValues, formSchema, TFormSchema }

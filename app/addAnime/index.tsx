@@ -1,7 +1,7 @@
 import { handleAddAnime } from '@/api'
 import { getAnimeByName } from '@/api/anime'
 import BaseAnimeForm from '@/components/BaseForm'
-import { type TFormSchema } from '@/components/schema'
+import { formDefaultValues, type TFormSchema } from '@/components/schema'
 import { EStatus } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
@@ -11,17 +11,6 @@ import { router, useNavigation } from 'expo-router'
 import React, { useLayoutEffect } from 'react'
 import { type SubmitHandler } from 'react-hook-form'
 import Toast from 'react-native-toast-message'
-
-const formData = {
-    name: '',
-    updateTimeHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-    totalEpisode: 0,
-    status: EStatus.serializing,
-    cover: '',
-    currentEpisode: 0,
-    updateWeekday: '',
-    firstEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-} as const
 
 export default function Index() {
     const navigation = useNavigation()
@@ -103,5 +92,5 @@ export default function Index() {
         return false
     }
 
-    return <BaseAnimeForm formData={formData} onSubmit={onSubmit} />
+    return <BaseAnimeForm formData={formDefaultValues} onSubmit={onSubmit} />
 }
