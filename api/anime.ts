@@ -4,7 +4,7 @@ import { EStatus, EWeekday } from '@/enums'
 import { TTx } from '@/types'
 import { getLastEpisodeTimestamp, getStatus } from '@/utils/time'
 import dayjs from 'dayjs'
-import { eq } from 'drizzle-orm'
+import { and, eq, ne } from 'drizzle-orm'
 import type { DeepExpand } from 'types-tools'
 
 export interface IAddAnimeData {
@@ -114,6 +114,39 @@ export async function getAnimeList(): Promise<IAnime[]> {
  */
 export async function getAnimeById(tx: TTx, id: number) {
     const result = await tx.select().from(animeTable).where(eq(animeTable.id, id))
+    if (result.length === 0) {
+        console.log('对应的动漫数据不存在')
+        return
+    }
+    return result[0]
+}
+
+/**
+ * 根据name查找动漫
+ * @param tx
+ * @param id
+ * @returns
+ */
+export async function getAnimeByName(name: string) {
+    const result = await db.select().from(animeTable).where(eq(animeTable.name, name))
+    if (result.length === 0) {
+        console.log('对应的动漫数据不存在')
+        return
+    }
+    return result[0]
+}
+
+/**
+ * 根据name查找除了自身id外的动漫
+ * @param tx
+ * @param id
+ * @returns
+ */
+export async function getAnimeByNameExceptItself(name: string, id: number) {
+    const result = await db
+        .select()
+        .from(animeTable)
+        .where(and(eq(animeTable.name, name), ne(animeTable.id, id)))
     if (result.length === 0) {
         console.log('对应的动漫数据不存在')
         return

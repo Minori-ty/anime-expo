@@ -1,5 +1,5 @@
 import { handleUpdateAnime } from '@/api'
-import { handleGetAnimeById } from '@/api/anime'
+import { getAnimeByNameExceptItself, handleGetAnimeById } from '@/api/anime'
 import BaseAnimeForm from '@/components/BaseForm'
 import Loading from '@/components/lottie/Loading'
 import { TFormSchema } from '@/components/schema'
@@ -11,6 +11,7 @@ import dayjs from 'dayjs'
 import { router, useLocalSearchParams, useNavigation } from 'expo-router'
 import React, { useEffect } from 'react'
 import { type SubmitHandler } from 'react-hook-form'
+import Toast from 'react-native-toast-message'
 
 const formData = {
     name: 'asf',
@@ -39,8 +40,10 @@ export default function EditAnime() {
         queryFn: () => handleGetAnimeById(Number(id)),
     })
 
-    const onSubmit: SubmitHandler<TFormSchema> = data => {
+    const onSubmit: SubmitHandler<TFormSchema> = async data => {
         const { name, cover, totalEpisode } = data
+        const result = await handleValidateAnimeNameIsExist(name, Number(id))
+        if (result) return
         if (data.status === EStatus.serializing) {
             const { currentEpisode } = data
             updateAnimeMution({
@@ -102,6 +105,22 @@ export default function EditAnime() {
             alert(err)
         },
     })
+    /**
+     * 校验动漫名是否存在
+     * @param name
+     */
+    async function handleValidateAnimeNameIsExist(name: string, id: number) {
+        const result = await getAnimeByNameExceptItself(name, id)
+        if (result) {
+            Toast.show({
+                type: 'error',
+                text1: '该动漫已存在，请勿重复添加。如需修改，请编辑该动漫。',
+            })
+            return true
+        }
+        return false
+    }
+
     if (isLoading) {
         return <Loading />
     }
