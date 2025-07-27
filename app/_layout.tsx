@@ -1,6 +1,7 @@
 import { registerBackgroundTask, taskDefined } from '@/backgroundTasks'
 import Error from '@/components/lottie/Error'
 import Loading from '@/components/lottie/Loading'
+import Modal from '@/components/Modal/Modal'
 import { db, expo } from '@/db'
 import migrations from '@/drizzle/migrations'
 import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
@@ -77,6 +78,7 @@ export default function RootLayout() {
                                     <Stack.Screen name="+not-found" />
                                 </Stack>
                                 <Toast />
+                                <Modal />
                                 {/* <StatusBar style="auto" /> */}
                             </ThemeProvider>
                         </BottomSheetModalProvider>

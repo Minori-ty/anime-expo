@@ -1,21 +1,20 @@
 import { getAnimeList, handleAddAnime } from '@/api'
 import { getCalendarWithAnimeList, handleCalendarByAnimeIdList, handleClearCalendarByAnimeId } from '@/api/calendar'
 import Checkbox from '@/components/Checkbox'
-import CustomModal from '@/components/CustomModal'
+import { Modal } from '@/components/Modal/index'
 import PageHeader from '@/components/PageHeader'
 import Icon from '@/components/ui/Icon'
 import { EStatus, EWeekday } from '@/enums'
 import { themeColorPurple } from '@/styles'
 import { deleteJsonFile, exportJsonFile, importJsonFile, scanJsonFile } from '@/utils/file.android'
-import { cn } from '@/utils/nativewind'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { differenceBy, throttle } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
-import { PropsWithChildren, useCallback, useState } from 'react'
-import { Alert, Pressable, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { useCallback, useState } from 'react'
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 import { z } from 'zod'
@@ -25,8 +24,6 @@ type CheckboxState = 'unchecked' | 'checked' | 'indeterminate'
 export default function Setting() {
     const [selectedAnimeIdList, setSelectedAnimeIdList] = useState<number[]>([])
     const [selectedJsonFileList, setSelectedJsonFileList] = useState<string[]>([])
-    const [deleteFileModalVisible, setDeleteFileModalVisible] = useState(false)
-    const [deleteCalendarModalVisible, setDeleteCalendarModalVisible] = useState(false)
 
     const {
         data: calendarList = [],
@@ -86,7 +83,6 @@ export default function Setting() {
                     queryKey: ['settings-calendar'],
                 })
                 setSelectedAnimeIdList([])
-                setDeleteCalendarModalVisible(false)
             },
             onError: err => {},
         })
@@ -306,7 +302,7 @@ export default function Setting() {
                 queryKey: ['settings-json-file'],
             })
             setSelectedJsonFileList([])
-            setDeleteFileModalVisible(false)
+            Modal.hide()
         },
         onError: err => {},
     })
@@ -366,7 +362,9 @@ export default function Setting() {
                                     className={`flex-1 flex-row items-center justify-center rounded-lg px-4 py-3 ${
                                         isExportDataToJsonFileMutationLoading ? 'bg-gray-300' : 'bg-blue-600'
                                     }`}
-                                    onPress={() => exportDataToJsonFileMutation()}
+                                    onPress={() => {
+                                        exportDataToJsonFileMutation()
+                                    }}
                                     disabled={isExportDataToJsonFileMutationLoading}
                                 >
                                     <Download size={16} color="white" />
@@ -400,7 +398,16 @@ export default function Setting() {
                                 {selectedJsonFileList.length > 0 && (
                                     <TouchableOpacity
                                         className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
-                                        onPress={() => setDeleteFileModalVisible(true)}
+                                        onPress={() => {
+                                            Modal.show({
+                                                body: (
+                                                    <Text className="text-sm">
+                                                        你确定要删除{selectedJsonFileList.length}个文件吗
+                                                    </Text>
+                                                ),
+                                                onConfirm: () => deleteJsonFileListMution(selectedJsonFileList),
+                                            })
+                                        }}
                                     >
                                         <Trash2 size={14} color="#dc2626" />
                                         <Text className="ml-1 text-sm font-medium text-red-600">
@@ -457,14 +464,14 @@ export default function Setting() {
                                             <TouchableOpacity
                                                 className="p-2"
                                                 onPress={() => {
-                                                    Alert.alert('确认删除', `确定要删除文件 ${file.name} 吗？`, [
-                                                        { text: '取消', style: 'cancel' },
-                                                        {
-                                                            text: '删除',
-                                                            style: 'destructive',
-                                                            onPress: () => deleteJsonFileMution(file.name),
-                                                        },
-                                                    ])
+                                                    Modal.show({
+                                                        body: (
+                                                            <Text className="text-sm">
+                                                                你确定要删除文件 {file.name} 吗？
+                                                            </Text>
+                                                        ),
+                                                        onConfirm: () => deleteJsonFileMution(file.name),
+                                                    })
                                                 }}
                                             >
                                                 <Trash2 size={16} color="#ef4444" />
@@ -485,7 +492,16 @@ export default function Setting() {
                                 {selectedAnimeIdList.length > 0 && (
                                     <TouchableOpacity
                                         className="flex-row items-center rounded-lg bg-red-100 px-3 py-2"
-                                        onPress={() => setDeleteCalendarModalVisible(true)}
+                                        onPress={() => {
+                                            Modal.show({
+                                                body: (
+                                                    <Text className="text-sm">
+                                                        你确定要删除{selectedAnimeIdList.length}个动漫日历事件吗？
+                                                    </Text>
+                                                ),
+                                                onConfirm: handleUnsubscribeAll,
+                                            })
+                                        }}
                                         disabled={isHandleCalendarByAnimeIdListMutionLoading}
                                     >
                                         <Trash2 size={14} color="#dc2626" />
@@ -535,18 +551,14 @@ export default function Setting() {
                                                 <TouchableOpacity
                                                     className="p-2"
                                                     onPress={() => {
-                                                        Alert.alert(
-                                                            '确认删除',
-                                                            `确定要删除事件 ${item.anime.name} 吗？`,
-                                                            [
-                                                                { text: '取消', style: 'cancel' },
-                                                                {
-                                                                    text: '删除',
-                                                                    style: 'destructive',
-                                                                    onPress: () => handleUnsubscribe(item.anime.id),
-                                                                },
-                                                            ]
-                                                        )
+                                                        Modal.show({
+                                                            body: (
+                                                                <Text className="text-sm">
+                                                                    确定要删除事件 {item.anime.name} 吗？
+                                                                </Text>
+                                                            ),
+                                                            onConfirm: () => handleUnsubscribe(item.anime.id),
+                                                        })
                                                     }}
                                                 >
                                                     <Trash2 size={16} color="#ef4444" />
@@ -560,58 +572,6 @@ export default function Setting() {
                     </View>
                 </ScrollView>
             </SafeAreaView>
-            <Modal
-                visible={deleteCalendarModalVisible}
-                onClose={() => setDeleteCalendarModalVisible(false)}
-                onConfirm={handleUnsubscribeAll}
-            >
-                <Text className="text-sm">你确定要删除动漫日历事件吗？</Text>
-            </Modal>
-            <Modal
-                visible={deleteFileModalVisible}
-                onClose={() => setDeleteFileModalVisible(false)}
-                onConfirm={() => {
-                    deleteJsonFileListMution(selectedJsonFileList)
-                }}
-            >
-                <Text className="text-sm">你确定要删除文件吗？</Text>
-            </Modal>
         </>
-    )
-}
-
-interface IModalProps {
-    visible: boolean
-    onClose?: () => void
-    onConfirm?: () => void
-}
-function Modal({ visible, onClose, onConfirm, children }: PropsWithChildren<IModalProps>) {
-    return (
-        <CustomModal visible={visible} onClose={() => onClose && onClose()}>
-            <View pointerEvents="box-none" className="w-80 rounded-3xl bg-white px-5 pb-9 pt-8">
-                <View>
-                    <Text className="mb-4 text-xl font-bold">确认删除</Text>
-                    {children}
-                </View>
-                <View className="mt-5 flex-row justify-end">
-                    <View className="">
-                        <Pressable
-                            onPress={() => onClose && onClose()}
-                            className="h-7 w-16 items-center justify-center"
-                        >
-                            <Text className={cn('text-base', 'text-theme')}>取消</Text>
-                        </Pressable>
-                    </View>
-                    <View>
-                        <Pressable
-                            onPress={() => onConfirm && onConfirm()}
-                            className="h-7 w-16 items-center justify-center"
-                        >
-                            <Text className={cn('text-base', 'text-theme')}>删除</Text>
-                        </Pressable>
-                    </View>
-                </View>
-            </View>
-        </CustomModal>
     )
 }

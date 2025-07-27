@@ -7,6 +7,8 @@ export const useAppStateRefresh = () => {
 
     useEffect(() => {
         const subscription = AppState.addEventListener('change', nextAppState => {
+            console.log(appState)
+
             // 当应用从后台/非活跃状态切换到活跃状态时
             if (appState.match(/inactive|background/) && nextAppState === 'active') {
                 // 刷新所有查询

@@ -15,7 +15,8 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import utc from 'dayjs/plugin/utc'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
-import React, { createContext, useContext, useState } from 'react'
+import { debounce } from 'lodash-es'
+import React, { createContext, useCallback, useContext, useState } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { SceneMap, TabBar, TabView } from 'react-native-tab-view'
@@ -156,6 +157,16 @@ interface IAnimeCardItemProps {
 }
 
 function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
+    const handleToAnimeDetail = useCallback((id: number) => {
+        const debounceHandler = debounce(
+            () => {
+                router.push(`/animeDetail/${id}`)
+            },
+            300,
+            { leading: true, trailing: false }
+        )
+        return () => debounceHandler.cancel()
+    }, [])
     return (
         <View className="my-2 flex-row">
             <View className="w-16 items-center justify-start">
@@ -167,7 +178,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
                         <TouchableOpacity
                             key={item.id}
                             activeOpacity={0.5}
-                            onPress={() => router.push(`/animeDetail/${item.id}`)}
+                            onPress={() => handleToAnimeDetail(item.id)}
                         >
                             <View className="mb-3 h-28 flex-1 flex-row">
                                 <Image
