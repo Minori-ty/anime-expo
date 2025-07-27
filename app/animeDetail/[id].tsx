@@ -24,6 +24,11 @@ import DateTimePicker, {
     useDefaultStyles,
 } from 'react-native-ui-datepicker'
 
+interface IAnimeDetailContext {
+    firstEpisodeYYYYMMDDHHmm: string
+    currentEpisode: number
+    totalEpisode: number
+}
 const animeDetailContext = createContext<IAnimeDetailContext | null>(null)
 
 const useAnimeDetailContext = () => {
@@ -32,11 +37,6 @@ const useAnimeDetailContext = () => {
     return ctx
 }
 
-interface IAnimeDetailContext {
-    firstEpisodeYYYYMMDDHHmm: string
-    currentEpisode: number
-    totalEpisode: number
-}
 function AnimeDetail() {
     const { id } = useLocalSearchParams<{ id: string }>()
     const navigation = useNavigation()
@@ -246,7 +246,7 @@ function AnimeDetail() {
                                     source={anime.cover}
                                     placeholder={{ blurhash }}
                                     contentFit="cover"
-                                    transition={1000}
+                                    transition={500}
                                     cachePolicy={'memory-disk'}
                                     style={styles.cover}
                                 />
