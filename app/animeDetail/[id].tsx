@@ -419,7 +419,7 @@ function Day({ day }: { day: CalendarDay }) {
                     'font-archivo text-foreground top-2',
                     !isCurrentMonth && 'text-gray-200',
                     isSelected && isToday && 'text-white',
-                    !isSelected && isToday && 'text-theme'
+                    !isSelected && isToday && 'text-blue-500'
                 )}
             >
                 {day.text}
@@ -432,7 +432,7 @@ function Day({ day }: { day: CalendarDay }) {
                             'font-archivo text-foreground text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
-                            !isSelected && isToday && 'text-theme'
+                            !isSelected && isToday && 'text-blue-500'
                         )}
                     >
                         {episode}

@@ -2,7 +2,7 @@ import { handleAddAnime } from '@/api'
 import { getAnimeByName } from '@/api/anime'
 import BaseAnimeForm from '@/components/BaseForm'
 import { type TFormSchema } from '@/components/schema'
-import { EStatus, EWeekday } from '@/enums'
+import { EStatus } from '@/enums'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
 import { useMutation } from '@tanstack/react-query'
@@ -19,9 +19,9 @@ const formData = {
     status: EStatus.serializing,
     cover: '',
     currentEpisode: 0,
-    updateWeekday: EWeekday.monday,
+    updateWeekday: '',
     firstEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
-}
+} as const
 
 export default function Index() {
     const navigation = useNavigation()
@@ -37,13 +37,14 @@ export default function Index() {
         const result = await handleValidateAnimeNameIsExist(name)
         if (result) return
         if (data.status === EStatus.serializing) {
-            const { currentEpisode } = data
+            const { currentEpisode, updateTimeHHmm, updateWeekday } = data
+            if (updateWeekday === '') return
             handleAddAnimeMution({
                 name,
                 currentEpisode,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: getFirstEpisodeTimestamp(data),
+                firstEpisodeTimestamp: getFirstEpisodeTimestamp({ currentEpisode, updateTimeHHmm, updateWeekday }),
             })
         } else if (data.status === EStatus.completed) {
             const { firstEpisodeYYYYMMDDHHmm } = data

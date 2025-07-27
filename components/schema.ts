@@ -14,6 +14,7 @@ const statusSchema = z.discriminatedUnion('status', [
             z.literal(EWeekday.friday),
             z.literal(EWeekday.saturday),
             z.literal(EWeekday.sunday),
+            z.literal(''),
         ]),
         currentEpisode: z.coerce.number(),
         updateTimeHHmm: z.string().regex(/(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]/, '请输入正确的时间格式HH:mm'),
@@ -55,6 +56,13 @@ const formSchema = z
                     code: ZodIssueCode.custom,
                     path: ['currentEpisode'],
                     message: '该番剧已完结，请选择已完结状态',
+                })
+            }
+            if (val.updateWeekday === '') {
+                ctx.addIssue({
+                    code: ZodIssueCode.custom,
+                    path: ['updateWeekday'],
+                    message: '请选择其中一项',
                 })
             }
         }

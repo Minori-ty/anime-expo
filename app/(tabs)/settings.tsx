@@ -7,6 +7,7 @@ import Icon from '@/components/ui/Icon'
 import { EStatus, EWeekday } from '@/enums'
 import { themeColorPurple } from '@/styles'
 import { deleteJsonFile, exportJsonFile, importJsonFile, scanJsonFile } from '@/utils/file.android'
+import { cn } from '@/utils/nativewind'
 import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -583,7 +584,7 @@ function Modal({ visible, onClose, onConfirm, children }: PropsWithChildren<IMod
                             onPress={() => onClose && onClose()}
                             className="h-7 w-16 items-center justify-center"
                         >
-                            <Text className="text-theme text-base">取消</Text>
+                            <Text className={cn('text-base', 'text-theme')}>取消</Text>
                         </Pressable>
                     </View>
                     <View>
@@ -591,7 +592,7 @@ function Modal({ visible, onClose, onConfirm, children }: PropsWithChildren<IMod
                             onPress={() => onConfirm && onConfirm()}
                             className="h-7 w-16 items-center justify-center"
                         >
-                            <Text className="text-theme text-base">删除</Text>
+                            <Text className={cn('text-base', 'text-theme')}>删除</Text>
                         </Pressable>
                     </View>
                 </View>

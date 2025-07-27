@@ -45,14 +45,15 @@ export default function EditAnime() {
         const result = await handleValidateAnimeNameIsExist(name, Number(id))
         if (result) return
         if (data.status === EStatus.serializing) {
-            const { currentEpisode } = data
+            const { currentEpisode, updateTimeHHmm, updateWeekday } = data
+            if (updateWeekday === '') return
             updateAnimeMution({
                 animeId: Number(id),
                 name,
                 currentEpisode,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: getFirstEpisodeTimestamp(data),
+                firstEpisodeTimestamp: getFirstEpisodeTimestamp({ currentEpisode, updateTimeHHmm, updateWeekday }),
             })
         } else if (data.status === EStatus.completed) {
             const { firstEpisodeYYYYMMDDHHmm } = data

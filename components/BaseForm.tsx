@@ -1,5 +1,6 @@
 import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
 import { EStatus, EWeekday } from '@/enums'
+import { useUpdateEffect } from '@/hooks/useUpdateEffect'
 import { cn } from '@/utils/nativewind'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -7,7 +8,7 @@ import { Picker } from '@react-native-picker/picker'
 import dayjs from 'dayjs'
 import { useNavigation } from 'expo-router'
 import React, { PropsWithChildren, useEffect, useMemo, useRef } from 'react'
-import { Controller, FieldError, FieldErrors, SubmitHandler, useForm, useWatch } from 'react-hook-form'
+import { Controller, FieldError, FieldErrors, SubmitHandler, useForm } from 'react-hook-form'
 import { Button, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import type { DeepExpand } from 'types-tools'
@@ -47,7 +48,7 @@ export interface IBaseAnimeFormProps {
         status: typeof EStatus.valueType
         cover: string
         currentEpisode: number
-        updateWeekday: typeof EWeekday.valueType
+        updateWeekday: typeof EWeekday.valueType | ''
         firstEpisodeYYYYMMDDHHmm: string
     }
 }
@@ -82,7 +83,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
             TFormSchema,
             {
                 currentEpisode: number
-                updateWeekday: typeof EWeekday.valueType
+                updateWeekday: typeof EWeekday.valueType | ''
                 updateTimeHHmm: string
             }
         >
@@ -96,19 +97,18 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
             >
         > = errors
 
-    const status = useWatch({ control, name: 'status' })
-
-    const [currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday] = watch([
+    const [currentEpisode, totalEpisode, firstEpisodeYYYYMMDDHHmm, updateTimeHHmm, updateWeekday, status] = watch([
         'currentEpisode',
         'totalEpisode',
         'firstEpisodeYYYYMMDDHHmm',
         'updateTimeHHmm',
         'updateWeekday',
+        'status',
     ])
 
-    useEffect(() => {
-        trigger(['currentEpisode', 'totalEpisode'])
-    }, [trigger, totalEpisode, currentEpisode])
+    useUpdateEffect(() => {
+        trigger(['currentEpisode', 'totalEpisode', 'firstEpisodeYYYYMMDDHHmm'])
+    }, [trigger, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm])
 
     const onSubmit: SubmitHandler<TFormSchema> = async data => {
         submit(data)
@@ -118,6 +118,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
             return '-'
         }
         if (status === EStatus.serializing) {
+            if (updateWeekday === '') return '-'
             return dayjs
                 .unix(getFirstEpisodeTimestamp({ currentEpisode, updateTimeHHmm, updateWeekday }))
                 .add(totalEpisode - 1, 'week')
@@ -141,7 +142,11 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
     }
 
     return (
-        <KeyboardAwareScrollView bottomOffset={100} showsVerticalScrollIndicator={false} className="bg-white px-4 pt-5">
+        <KeyboardAwareScrollView
+            bottomOffset={100}
+            showsVerticalScrollIndicator={false}
+            className="bg-white px-4 pb-20 pt-5"
+        >
             <FormItem label="番剧名称" error={fullErrors.name}>
                 <Controller
                     control={control}
@@ -220,19 +225,20 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                         control={control}
                         name="updateWeekday"
                         render={({ field }) => {
-                            console.log(field)
-
                             return (
-                                <Picker
-                                    {...field}
-                                    selectedValue={field.value}
-                                    className={cn('border')}
-                                    onValueChange={field.onChange}
+                                <View
+                                    className={cn(
+                                        'rounded-md border border-[#ccc]',
+                                        fullErrors.updateWeekday && 'border-red-500'
+                                    )}
                                 >
-                                    {EWeekday.toMenu().map(item => {
-                                        return <Picker.Item key={item.key} label={item.label} value={item.key} />
-                                    })}
-                                </Picker>
+                                    <Picker {...field} selectedValue={field.value} onValueChange={field.onChange}>
+                                        <Picker.Item label="请选择" value="" />
+                                        {EWeekday.toMenu().map(item => {
+                                            return <Picker.Item key={item.key} label={item.label} value={item.key} />
+                                        })}
+                                    </Picker>
+                                </View>
                             )
                         }}
                     />
@@ -321,7 +327,7 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     )}
                 />
             </FormItem>
-            <View className="mb-10">
+            <View className="mb-20">
                 <Button title="提交" onPress={handleSubmit(onSubmit)} />
             </View>
             <Controller

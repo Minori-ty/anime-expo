@@ -155,7 +155,7 @@ export default function MyAnime() {
                                 onPress={() => setModalVisible(false)}
                                 className="h-7 w-16 items-center justify-center"
                             >
-                                <Text className="text-theme text-base">取消</Text>
+                                <Text className={cn('text-base', 'text-theme')}>取消</Text>
                             </Pressable>
                         </View>
                         <View>
@@ -163,7 +163,7 @@ export default function MyAnime() {
                                 onPress={() => deleteAnimeMutation()}
                                 className="h-7 w-16 items-center justify-center"
                             >
-                                <Text className="text-theme text-base">删除</Text>
+                                <Text className={cn('text-base', 'text-theme')}>删除</Text>
                             </Pressable>
                         </View>
                     </View>
