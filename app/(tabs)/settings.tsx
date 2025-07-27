@@ -147,7 +147,12 @@ export default function Setting() {
                 text1: '导出成功！',
             })
         },
-        onError: err => {},
+        onError: err => {
+            Toast.show({
+                type: 'error',
+                text1: '导入失败！' + err,
+            })
+        },
     })
 
     const validateJsonData = z.object({
@@ -180,9 +185,9 @@ export default function Setting() {
     })
 
     /**
-     * 导入本地json为数据
+     * 导入json文件为数据
      */
-    async function handleImportData() {
+    async function handleImportJsonFileToData() {
         const jsonData = await importJsonFile()
         const result = validateJsonData.safeParse(jsonData)
         if (!result.success) {
@@ -237,21 +242,31 @@ export default function Setting() {
         )
     }
 
-    const { mutate: handleImportDataMution, isPending: isHandleImportDataMutionLoading } = useMutation({
-        mutationFn: handleImportData,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['my-anime'],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['schedule'],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['settings-calendar'],
-            })
-        },
-        onError: err => {},
-    })
+    const { mutate: handleImportJsonFileToDataMution, isPending: handleImportJsonFileToDataMutionLoading } =
+        useMutation({
+            mutationFn: handleImportJsonFileToData,
+            onSuccess: () => {
+                queryClient.invalidateQueries({
+                    queryKey: ['my-anime'],
+                })
+                queryClient.invalidateQueries({
+                    queryKey: ['schedule'],
+                })
+                queryClient.invalidateQueries({
+                    queryKey: ['settings-calendar'],
+                })
+                Toast.show({
+                    type: 'success',
+                    text1: '导入成功！',
+                })
+            },
+            onError: err => {
+                Toast.show({
+                    type: 'error',
+                    text1: '导入失败！' + err,
+                })
+            },
+        })
 
     const { mutate: deleteJsonFileMution } = useMutation({
         mutationFn: deleteJsonFile,
@@ -362,14 +377,14 @@ export default function Setting() {
 
                                 <TouchableOpacity
                                     className={`flex-1 flex-row items-center justify-center rounded-lg px-4 py-3 ${
-                                        isHandleImportDataMutionLoading ? 'bg-gray-300' : 'bg-green-600'
+                                        handleImportJsonFileToDataMutionLoading ? 'bg-gray-300' : 'bg-green-600'
                                     }`}
-                                    onPress={() => handleImportDataMution()}
-                                    disabled={isHandleImportDataMutionLoading}
+                                    onPress={() => handleImportJsonFileToDataMution()}
+                                    disabled={handleImportJsonFileToDataMutionLoading}
                                 >
                                     <Upload size={16} color="white" />
                                     <Text className="ml-2 font-medium text-white">
-                                        {isHandleImportDataMutionLoading ? '导入中...' : '导入数据'}
+                                        {handleImportJsonFileToDataMutionLoading ? '导入中...' : '导入数据'}
                                     </Text>
                                 </TouchableOpacity>
                             </View>

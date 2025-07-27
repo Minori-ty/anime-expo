@@ -432,7 +432,7 @@ function Day({ day }: { day: CalendarDay }) {
                             'font-archivo text-foreground text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
-                            !isSelected && isToday && 'text-blue-500'
+                            !isSelected && isToday && 'text-orange-500'
                         )}
                     >
                         {episode}
