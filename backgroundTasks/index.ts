@@ -1,3 +1,4 @@
+import { updateScheduleTable, updateToBeUpdatedTable } from '@/api'
 import * as BackgroundTask from 'expo-background-task'
 import * as TaskManager from 'expo-task-manager'
 
@@ -32,4 +33,6 @@ export async function registerBackgroundTask() {
     })
 }
 
-export function refreshScheduleAndCalendar() {}
+export async function refreshScheduleAndCalendar() {
+    return Promise.all([updateScheduleTable(), updateToBeUpdatedTable()])
+}

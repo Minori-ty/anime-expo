@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import isoWeek from 'dayjs/plugin/isoWeek'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import utc from 'dayjs/plugin/utc'
 import { Image } from 'expo-image'
@@ -23,6 +24,7 @@ dayjs.extend(customParseFormat)
 dayjs.extend(isSameOrBefore)
 dayjs.extend(isoWeek)
 dayjs.extend(utc)
+dayjs.extend(isSameOrAfter)
 
 interface IScheduleContext {
     list: TAnimeList

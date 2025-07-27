@@ -63,14 +63,14 @@ export function willUpdateThisWeek(firstEpisodeTimestamp: number) {
  * 获取本周日的结束的时间戳
  */
 export function getSundayTimestampInThisWeek() {
-    return dayjs().isoWeekday(7).hour(23).minute(59).second(59).unix()
+    return dayjs().isoWeekday(7).endOf('day').unix()
 }
 
 /**
  * 获取本周一的开始的时间戳
  */
 export function getMondayTimestampInThisWeek() {
-    return dayjs().isoWeekday(1).hour(0).minute(0).second(0).unix()
+    return dayjs().isoWeekday(1).startOf('day').unix()
 }
 
 interface IGetFirstEpisodeTimestamp {
@@ -107,4 +107,24 @@ export function getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode }:
         .unix(firstEpisodeTimestamp)
         .add((totalEpisode - 1) * 7, 'day')
         .unix()
+}
+
+/**
+ * 计算到本周应该更新多少集
+ * @param    firstEpisodeTimestamp - 第一集时间戳（秒）
+ * @returns 本周应该更新到第几集
+ */
+export function calcEpisodeThisWeek(firstEpisodeTimestamp: number): number {
+    const firstEp = dayjs.unix(firstEpisodeTimestamp)
+    const mondayThisWeek = dayjs().isoWeekday(1).startOf('day')
+
+    // 如果第一集还没发布，本周不应有新集
+    if (firstEp.isAfter(mondayThisWeek)) return 0
+
+    // 距离第一集过去了多少个周一（本周一-第一集的周一）/7天
+    const firstEpMonday = firstEp.isoWeekday(1).startOf('day')
+    const diffWeeks = mondayThisWeek.diff(firstEpMonday, 'week')
+
+    // 本周应该更新到第几集 = 1（第一周）+ diffWeeks
+    return diffWeeks + 1
 }

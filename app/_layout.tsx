@@ -1,8 +1,9 @@
-import { refreshScheduleAndCalendar, registerBackgroundTask, taskDefined } from '@/backgroundTasks'
+import { registerBackgroundTask, taskDefined } from '@/backgroundTasks'
 import Error from '@/components/lottie/Error'
 import Loading from '@/components/lottie/Loading'
 import { db, expo } from '@/db'
 import migrations from '@/drizzle/migrations'
+import { useAppStateRefresh } from '@/hooks/useAppStateRefresh'
 import { getCalendarPermission, getNotificationPermission } from '@/permissions'
 import '@/styles/global.css'
 import { queryClient } from '@/utils/react-query'
@@ -45,8 +46,8 @@ export default function RootLayout() {
         getNotificationPermission()
         getCalendarPermission()
         registerBackgroundTask()
-        refreshScheduleAndCalendar()
     })
+    useAppStateRefresh()
 
     function errorHandler(error: Error, stackTrace: string) {
         console.log(error)

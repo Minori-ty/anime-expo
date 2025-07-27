@@ -92,8 +92,14 @@ export async function createCalendarEvent({
             endDate,
             timeZone: 'Asia/Shanghai',
             alarms: [
-                { relativeOffset: -10 }, // 提前10分钟通知
-                { relativeOffset: -5 }, // 提前5分钟通知
+                {
+                    relativeOffset: -10,
+                    method: Calendar.AlarmMethod.ALERT,
+                }, // 提前10分钟通知
+                {
+                    relativeOffset: -5,
+                    method: Calendar.AlarmMethod.ALERT,
+                }, // 提前5分钟通知
             ],
             recurrenceRule: {
                 frequency: Calendar.Frequency.WEEKLY,

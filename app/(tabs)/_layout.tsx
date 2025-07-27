@@ -2,13 +2,20 @@ import { Tabs } from 'expo-router'
 import React from 'react'
 import { Platform } from 'react-native'
 
+import { refreshScheduleAndCalendar } from '@/backgroundTasks'
 import { HapticTab } from '@/components/HapticTab'
 import Icon from '@/components/ui/Icon'
 import TabBarBackground from '@/components/ui/TabBarBackground'
 import { themeColorPurple } from '@/styles'
 import { cn } from '@/utils/nativewind'
+import { useQuery } from '@tanstack/react-query'
 
 export default function TabLayout() {
+    useQuery({
+        queryKey: ['update-anime-currentEpisode'],
+        queryFn: refreshScheduleAndCalendar,
+    })
+
     return (
         <Tabs
             screenOptions={{

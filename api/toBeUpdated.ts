@@ -1,4 +1,4 @@
-import { toBeUpdatedTable } from '@/db/schema'
+import { animeTable, toBeUpdatedTable } from '@/db/schema'
 import { TTx } from '@/types'
 import { eq } from 'drizzle-orm'
 
@@ -51,4 +51,8 @@ export async function getToBeUpdatedByAnimeId(tx: TTx, animeId: number) {
     }
 
     return result[0]
+}
+
+export async function getToBeUpdatedList(tx: TTx) {
+    return await tx.select().from(toBeUpdatedTable).innerJoin(animeTable, eq(animeTable.id, toBeUpdatedTable.animeId))
 }
