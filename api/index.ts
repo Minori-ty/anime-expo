@@ -1,10 +1,16 @@
 import { db } from '@/db'
 import { EStatus } from '@/enums'
-import { calcEpisodeThisWeek, getLastEpisodeTimestamp, getStatus, willUpdateThisWeek } from '@/utils/time'
+import {
+    calcEpisodeThisWeek,
+    getLastEpisodeTimestamp,
+    getMondayTimestampInThisWeek,
+    getStatus,
+    willUpdateThisWeek,
+} from '@/utils/time'
 import dayjs from 'dayjs'
 import { addAnime, addAnimeList, deleteAnimeById, updateAnimeById, type IAddAnimeData } from './anime'
 import { clearCalendarByAnimeId } from './calendar'
-import { deleteScheduleByAnimeId, getScheduleList, handleAddSchedule } from './schedule'
+import { addSchedule, deleteScheduleByAnimeId, getScheduleList, handleAddSchedule } from './schedule'
 import { addToBeUpdatedByAnimeId, deleteToBeUpdatedByAnimeId, getToBeUpdatedList } from './toBeUpdated'
 export { getAnimeList } from './anime'
 
@@ -105,11 +111,11 @@ export async function handleUpdateAnime({
         await updateAnimeById(tx, { ...animeData, animeId })
 
         // 2. 计算新状态
-        const lastTs = getLastEpisodeTimestamp({
+        const lastEpisodeTimestamp = getLastEpisodeTimestamp({
             firstEpisodeTimestamp: animeData.firstEpisodeTimestamp,
             totalEpisode: animeData.totalEpisode,
         })
-        const status = getStatus(animeData.firstEpisodeTimestamp, lastTs)
+        const status = getStatus(animeData.firstEpisodeTimestamp, lastEpisodeTimestamp)
 
         // 3. 统一清理所有关联表和日历
         await deleteScheduleByAnimeId(tx, animeId)
@@ -124,6 +130,11 @@ export async function handleUpdateAnime({
             if (willUpdateThisWeek(animeData.firstEpisodeTimestamp)) {
                 await handleAddSchedule(tx, animeId, animeData)
             }
+        } else if (status === EStatus.completed) {
+            // 是在本周内完结的，继续添加到更新表中
+            if (lastEpisodeTimestamp >= getMondayTimestampInThisWeek()) {
+                await addSchedule(tx, animeId)
+            }
         }
         // 已完结：所有表已清理，不做其它处理
     })
@@ -134,13 +145,14 @@ export async function handleUpdateAnime({
  */
 export async function updateScheduleTable() {
     return await db.transaction(async tx => {
-        const scheduleList = await getScheduleList(tx)
+        const scheduleList = await getScheduleList()
 
         return await Promise.all(
             scheduleList.map(async anime => {
                 const { id, firstEpisodeYYYYMMDDHHmm, totalEpisode, currentEpisode, cover, name } = anime
-                const firstEpisodeTimestamp = dayjs(firstEpisodeYYYYMMDDHHmm).unix()
+                const firstEpisodeTimestamp = dayjs(firstEpisodeYYYYMMDDHHmm).second(0).unix()
                 const shouldEpisodeNum = calcEpisodeThisWeek(firstEpisodeTimestamp)
+
                 if (shouldEpisodeNum === 0) return
                 if (shouldEpisodeNum <= totalEpisode) {
                     if (currentEpisode < shouldEpisodeNum) {
@@ -155,6 +167,8 @@ export async function updateScheduleTable() {
                     }
                     return true
                 } else {
+                    console.log('错误走了删除逻辑')
+
                     // 已完结，清理
                     await deleteScheduleByAnimeId(tx, id)
                     await clearCalendarByAnimeId(tx, id)

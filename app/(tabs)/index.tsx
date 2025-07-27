@@ -93,7 +93,8 @@ function TabViewComponent({ updateWeekday }: { updateWeekday: typeof EWeekday.va
 
     const isLoading = queryState?.fetchStatus === 'fetching'
     function refetch() {
-        queryClient.invalidateQueries({ queryKey: ['my-anime'] })
+        queryClient.invalidateQueries({ queryKey: ['schedule'] })
+        queryClient.invalidateQueries({ queryKey: ['update-anime-currentEpisode'] })
     }
     if (animeList.length === 0) {
         return (

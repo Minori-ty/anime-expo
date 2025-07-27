@@ -13,8 +13,8 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { differenceBy, throttle } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
-import { PropsWithChildren, useCallback, useEffect, useState } from 'react'
-import { Alert, AppState, Pressable, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { PropsWithChildren, useCallback, useState } from 'react'
+import { Alert, Pressable, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 import { z } from 'zod'
@@ -26,15 +26,6 @@ export default function Setting() {
     const [selectedJsonFileList, setSelectedJsonFileList] = useState<string[]>([])
     const [deleteFileModalVisible, setDeleteFileModalVisible] = useState(false)
     const [deleteCalendarModalVisible, setDeleteCalendarModalVisible] = useState(false)
-    const [appState, setAppState] = useState(AppState.currentState)
-    useEffect(() => {
-        const subscription = AppState.addEventListener('change', next => {
-            console.log(next)
-        })
-        return () => {
-            subscription.remove()
-        }
-    }, [appState])
 
     const {
         data: calendarList = [],
@@ -125,21 +116,6 @@ export default function Setting() {
             : selectedAnimeIdList.length === calendarList.length
               ? 'checked'
               : 'indeterminate'
-
-    // function onHandleDeleteAll() {
-    //     if (selectedAnimeIdList.length === 0) return
-
-    //     Alert.alert('确认删除', `确定要删除选中的 ${selectedAnimeIdList.length} 个日历事件吗？`, [
-    //         { text: '取消', style: 'cancel' },
-    //         {
-    //             text: '删除',
-    //             style: 'destructive',
-    //             onPress: () => {
-    //                 handleUnsubscribeAll()
-    //             },
-    //         },
-    //     ])
-    // }
 
     const handleEventSelect = (animeId: number, checked: boolean) => {
         if (checked) {
@@ -324,22 +300,6 @@ export default function Setting() {
         if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
     }
-
-    // function handleDeleteselectedJsonFileList() {
-    //     if (selectedJsonFileList.length === 0) return
-
-    //     Alert.alert('确认删除', `确定要删除选中的 ${selectedJsonFileList.length} 个文件吗？`, [
-    //         { text: '取消', style: 'cancel' },
-    //         {
-    //             text: '删除',
-    //             style: 'destructive',
-    //             onPress: () => {
-    // deleteJsonFileListMution(selectedJsonFileList)
-    // setSelectedJsonFileList([])
-    //             },
-    //         },
-    //     ])
-    // }
 
     const handleFileSelectAll = (state: CheckboxState) => {
         if (state === 'checked') {

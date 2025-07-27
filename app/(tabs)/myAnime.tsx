@@ -64,6 +64,11 @@ export default function MyAnime() {
         queryFn: getAnimeList,
     })
 
+    function onRefetch() {
+        refetch()
+        queryClient.invalidateQueries({ queryKey: ['update-anime-currentEpisode'] })
+    }
+
     async function onDeleteAnime() {
         const result = await handleDeleteAnime(animeData.id)
         setModalVisible(false)
@@ -114,7 +119,7 @@ export default function MyAnime() {
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoading}
-                        onRefresh={refetch}
+                        onRefresh={onRefetch}
                         className="text-theme"
                         colors={[themeColorPurple]}
                     />

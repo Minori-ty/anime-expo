@@ -7,6 +7,7 @@ import { EStatus, EWeekday } from '@/enums'
 import { blurhash, themeColorPurple } from '@/styles'
 import { cn } from '@/utils/nativewind'
 import { queryClient } from '@/utils/react-query'
+import { getStatus } from '@/utils/time'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
@@ -49,8 +50,8 @@ function AnimeDetail() {
             totalEpisode: 0,
             cover: '',
             updateWeekday: EWeekday.monday,
-            firstEpisodeYYYYMMDDHHmm: '',
-            lastEpisodeYYYYMMDDHHmm: '',
+            firstEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
+            lastEpisodeYYYYMMDDHHmm: dayjs().format('YYYY-MM-DD HH:mm'),
             status: EStatus.serializing,
             updateTimeHHmm: '',
         },
@@ -60,9 +61,11 @@ function AnimeDetail() {
         queryFn: () => handleGetAnimeById(Number(id)),
     })
 
-    const [date, setDate] = useState<DateType>(anime.firstEpisodeYYYYMMDDHHmm && dayjs().format('YYYY-MM-DD HH:mm'))
+    const [firstEpisodeYYYYMMDDHHmm, setFirstEpisodeYYYYMMDDHHmm] = useState<DateType>(
+        anime.firstEpisodeYYYYMMDDHHmm && dayjs().format('YYYY-MM-DD HH:mm')
+    )
     useEffect(() => {
-        setDate(anime.firstEpisodeYYYYMMDDHHmm)
+        setFirstEpisodeYYYYMMDDHHmm(anime.firstEpisodeYYYYMMDDHHmm)
     }, [isLoading, anime])
 
     const handlePress = useCallback(() => {
@@ -133,6 +136,12 @@ function AnimeDetail() {
         return () => throttledPush.cancel()
     }, [id, handleClearCalendarByAnimeIdMution])
 
+    const status = useMemo<typeof EStatus.valueType>(() => {
+        const firstEpisodeTimestamp = dayjs(anime.firstEpisodeYYYYMMDDHHmm).second(0).unix()
+        const lastEpisodeTimestamp = dayjs(anime.lastEpisodeYYYYMMDDHHmm).second(0).unix()
+        return getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
+    }, [anime.firstEpisodeYYYYMMDDHHmm, anime.lastEpisodeYYYYMMDDHHmm])
+
     useLayoutEffect(() => {
         navigation.setOptions({
             headerTitle: '动漫详情',
@@ -181,6 +190,16 @@ function AnimeDetail() {
         Day: (day: CalendarDay) => <Day day={day} />,
     }
 
+    function onRefetch() {
+        queryClient.invalidateQueries({
+            queryKey: ['anime-calendar', id],
+        })
+        queryClient.invalidateQueries({
+            queryKey: ['anime-detail', id],
+        })
+        queryClient.invalidateQueries({ queryKey: ['update-anime-currentEpisode'] })
+    }
+
     return (
         <View className="flex-1 bg-gray-50">
             {/* Header */}
@@ -190,14 +209,7 @@ function AnimeDetail() {
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoading}
-                        onRefresh={() => {
-                            queryClient.invalidateQueries({
-                                queryKey: ['anime-calendar', id],
-                            })
-                            queryClient.invalidateQueries({
-                                queryKey: ['anime-detail', id],
-                            })
-                        }}
+                        onRefresh={onRefetch}
                         className="text-theme"
                         colors={[themeColorPurple]}
                     />
@@ -319,7 +331,7 @@ function AnimeDetail() {
                     </View>
 
                     {/* 有完结的时候才显示这个订阅 */}
-                    {!calendar && (
+                    {status !== EStatus.completed && !calendar && (
                         <View className="mt-2 bg-white p-6">
                             <TouchableOpacity
                                 className={cn(
@@ -336,7 +348,7 @@ function AnimeDetail() {
                         </View>
                     )}
 
-                    {calendar && (
+                    {status !== EStatus.completed && calendar && (
                         <View className="mt-2 bg-white p-6">
                             <TouchableOpacity
                                 className={cn(
@@ -357,8 +369,8 @@ function AnimeDetail() {
                         <DateTimePicker
                             styles={defaultStyles}
                             mode="single"
-                            date={date}
-                            onChange={day => setDate(day.date)}
+                            date={firstEpisodeYYYYMMDDHHmm}
+                            onChange={day => setFirstEpisodeYYYYMMDDHHmm(day.date)}
                             firstDayOfWeek={1}
                             multiRangeMode
                             showOutsideDays
@@ -366,11 +378,11 @@ function AnimeDetail() {
                             components={components}
                         />
                         <View className="h-16 items-end">
-                            {dayjs(date).format('YYYY-MM-DD') !== dayjs().format('YYYY-MM-DD') && (
+                            {dayjs(firstEpisodeYYYYMMDDHHmm).format('YYYY-MM-DD') !== dayjs().format('YYYY-MM-DD') && (
                                 <TouchableOpacity
                                     // eslint-disable-next-line tailwindcss/no-custom-classname
                                     className="elevation-lg size-16 items-center justify-center rounded-full bg-blue-500"
-                                    onPress={() => setDate(dayjs())}
+                                    onPress={() => setFirstEpisodeYYYYMMDDHHmm(dayjs())}
                                     activeOpacity={0.5}
                                 >
                                     <Text className="text-3xl text-white">今</Text>

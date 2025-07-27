@@ -219,18 +219,22 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
                     <Controller
                         control={control}
                         name="updateWeekday"
-                        render={({ field }) => (
-                            <Picker
-                                {...field}
-                                selectedValue={field.value}
-                                className={cn('border')}
-                                onValueChange={field.onChange}
-                            >
-                                {EWeekday.toMenu().map(item => {
-                                    return <Picker.Item key={item.key} label={item.label} value={item.key} />
-                                })}
-                            </Picker>
-                        )}
+                        render={({ field }) => {
+                            console.log(field)
+
+                            return (
+                                <Picker
+                                    {...field}
+                                    selectedValue={field.value}
+                                    className={cn('border')}
+                                    onValueChange={field.onChange}
+                                >
+                                    {EWeekday.toMenu().map(item => {
+                                        return <Picker.Item key={item.key} label={item.label} value={item.key} />
+                                    })}
+                                </Picker>
+                            )
+                        }}
                     />
                 </FormItem>
             )}

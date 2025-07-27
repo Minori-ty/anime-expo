@@ -52,7 +52,7 @@ export default function Index() {
                 currentEpisode: totalEpisode,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
+                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').second(0).unix(),
             })
         } else if (data.status === EStatus.toBeUpdated) {
             const { firstEpisodeYYYYMMDDHHmm } = data
@@ -61,7 +61,7 @@ export default function Index() {
                 currentEpisode: 0,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
+                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').second(0).unix(),
             })
         }
     }

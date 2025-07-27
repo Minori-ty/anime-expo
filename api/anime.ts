@@ -115,7 +115,6 @@ export async function getAnimeList(): Promise<IAnime[]> {
 export async function getAnimeById(tx: TTx, id: number) {
     const result = await tx.select().from(animeTable).where(eq(animeTable.id, id))
     if (result.length === 0) {
-        console.log('对应的动漫数据不存在')
         return
     }
     return result[0]
@@ -130,7 +129,6 @@ export async function getAnimeById(tx: TTx, id: number) {
 export async function getAnimeByName(name: string) {
     const result = await db.select().from(animeTable).where(eq(animeTable.name, name))
     if (result.length === 0) {
-        console.log('对应的动漫数据不存在')
         return
     }
     return result[0]
@@ -148,7 +146,6 @@ export async function getAnimeByNameExceptItself(name: string, id: number) {
         .from(animeTable)
         .where(and(eq(animeTable.name, name), ne(animeTable.id, id)))
     if (result.length === 0) {
-        console.log('对应的动漫数据不存在')
         return
     }
     return result[0]

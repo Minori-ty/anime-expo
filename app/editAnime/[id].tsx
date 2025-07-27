@@ -35,7 +35,7 @@ export default function EditAnime() {
 
     const { id } = useLocalSearchParams<{ id: string }>()
 
-    const { data, isLoading } = useQuery({
+    const { data: data = formData, isLoading } = useQuery({
         queryKey: ['anime-edit', id],
         queryFn: () => handleGetAnimeById(Number(id)),
     })
@@ -62,7 +62,7 @@ export default function EditAnime() {
                 currentEpisode: totalEpisode,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
+                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').second(0).unix(),
             })
         } else if (data.status === EStatus.toBeUpdated) {
             const { firstEpisodeYYYYMMDDHHmm } = data
@@ -72,7 +72,7 @@ export default function EditAnime() {
                 currentEpisode: 0,
                 totalEpisode,
                 cover,
-                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
+                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').second(0).unix(),
             })
         }
     }
@@ -125,5 +125,5 @@ export default function EditAnime() {
         return <Loading />
     }
 
-    return <BaseAnimeForm formData={data ?? formData} onSubmit={onSubmit} />
+    return <BaseAnimeForm formData={data} onSubmit={onSubmit} />
 }

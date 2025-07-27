@@ -80,7 +80,7 @@ export async function getCalendarByAnimeId(tx: TTx, animeId: number) {
     const result = await tx.select().from(calendarTable).where(eq(calendarTable.animeId, animeId))
 
     if (result.length === 0) {
-        console.log('该动漫没有注册日历事件，有可能是完结的动漫，也有可能是被用户主动删除了')
+        // console.log('该动漫没有注册日历事件，有可能是完结的动漫，也有可能是被用户主动删除了')
         return false
     }
     const hasEvent = await getCalendarEventByEventId(result[0].calendarId)

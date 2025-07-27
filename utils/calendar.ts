@@ -29,6 +29,7 @@ export async function deleteCalendarEvent(eventId: string) {
             return false
         }
         await Calendar.deleteEventAsync(eventId)
+        console.log('删除了=========================')
         console.log('删除日历成功')
         return true
     } catch {
@@ -86,6 +87,9 @@ export async function createCalendarEvent({
 
     // 解析输入的时间字符串
     try {
+        if (totalEpisode - currentEpisode < 1) {
+            return false
+        }
         const eventId = await Calendar.createEventAsync(defaultCalendar.id, {
             title: `${name} 即将更新!`,
             startDate,
@@ -111,7 +115,7 @@ export async function createCalendarEvent({
         return eventId
     } catch (error) {
         alert(`calendar.ts ${error}`)
-        return '' as const
+        return false
     }
 }
 
@@ -135,6 +139,7 @@ export async function getCalendarEventByEventId(eventId: string) {
     }
     try {
         await Calendar.getEventAsync(eventId)
+
         return true
     } catch {
         console.log('没有找到日历事件')

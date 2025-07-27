@@ -1,3 +1,4 @@
+import { db } from '@/db'
 import { animeTable, scheduleTable } from '@/db/schema'
 import { TTx } from '@/types'
 import { eq } from 'drizzle-orm'
@@ -42,8 +43,8 @@ export async function deleteScheduleByAnimeId(tx: TTx, animeId: number) {
  * 获取所有更新表数据
  * @returns
  */
-export async function getScheduleList(tx: TTx) {
-    const result = await tx.select().from(scheduleTable).innerJoin(animeTable, eq(animeTable.id, scheduleTable.animeId))
+export async function getScheduleList() {
+    const result = await db.select().from(scheduleTable).innerJoin(animeTable, eq(animeTable.id, scheduleTable.animeId))
     const animeList = result.map(item => parseAnimeData(item.anime))
 
     return animeList
