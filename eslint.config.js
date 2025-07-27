@@ -45,6 +45,7 @@ module.exports = defineConfig([
                     unnamedComponents: 'arrow-function', // 未命名组件使用箭头函数
                 },
             ],
+            'react/no-unstable-nested-components': 'error',
         },
         // 设置React版本（帮助eslint-plugin-react正确工作）
         settings: {
@@ -55,9 +56,9 @@ module.exports = defineConfig([
         },
     },
     ...tailwind.configs['flat/recommended'],
-    {
-        ignores: ['app.config.js', '.expo'],
-    },
     eslintPluginPrettierRecommended,
     eslintConfigPrettier,
+    {
+        ignores: ['app.config.js', '.expo', 'drizzle', './*.d.ts'],
+    },
 ])

@@ -36,29 +36,33 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     title: '更新表',
-                    tabBarIcon: ({ color, focused }) => (
-                        <Icon name="CalendarClock" className={cn('text-gray-500', focused && 'text-theme')} />
-                    ),
+                    tabBarIcon: IndexIcon,
                 }}
             />
             <Tabs.Screen
                 name="myAnime"
                 options={{
                     title: '我的追番',
-                    tabBarIcon: ({ color, focused }) => (
-                        <Icon name="Heart" className={cn('text-gray-500', focused && 'text-theme')} />
-                    ),
+                    tabBarIcon: MyAnimeIcon,
                 }}
             />
             <Tabs.Screen
                 name="settings"
                 options={{
                     title: '数据管理',
-                    tabBarIcon: ({ color, focused }) => (
-                        <Icon name="Settings" className={cn('text-gray-500', focused && 'text-theme')} />
-                    ),
+                    tabBarIcon: SettingsIcon,
                 }}
             />
         </Tabs>
     )
+}
+
+function IndexIcon({ color, focused }: { color: string; focused: boolean }) {
+    return <Icon name="CalendarClock" className={cn('text-gray-500', focused && 'text-theme')} />
+}
+function MyAnimeIcon({ color, focused }: { color: string; focused: boolean }) {
+    return <Icon name="Heart" className={cn('text-gray-500', focused && 'text-theme')} />
+}
+function SettingsIcon({ color, focused }: { color: string; focused: boolean }) {
+    return <Icon name="Settings" className={cn('text-gray-500', focused && 'text-theme')} />
 }

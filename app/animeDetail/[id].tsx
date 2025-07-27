@@ -202,7 +202,7 @@ function AnimeDetail() {
         },
     }
     const components: CalendarComponents = {
-        Day: (day: CalendarDay) => <Day day={day} />,
+        Day: Day,
     }
 
     function onRefetch() {
@@ -413,7 +413,7 @@ function AnimeDetail() {
 
 export default AnimeDetail
 
-function Day({ day }: { day: CalendarDay }) {
+function Day(day: CalendarDay) {
     const { isSelected, isCurrentMonth, isToday } = day
     const { totalEpisode, firstEpisodeYYYYMMDDHHmm, currentEpisode } = useAnimeDetailContext()
 
