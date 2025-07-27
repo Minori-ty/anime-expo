@@ -38,4 +38,6 @@ yarn-error.*
 
 app-example
 android
-package-lock.json
+
+# github action打包需要这个文件，所以不要禁止
+# package-lock.json
