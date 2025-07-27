@@ -165,6 +165,7 @@ function AnimeCardItem({ time, animeList }: IAnimeCardItemProps) {
             300,
             { leading: true, trailing: false }
         )
+        debounceHandler()
         return () => debounceHandler.cancel()
     }, [])
     return (

@@ -11,7 +11,7 @@ import { queryClient } from '@/utils/react-query'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { differenceBy, throttle } from 'lodash-es'
+import { debounce, differenceBy } from 'lodash-es'
 import { Calendar, Download, FileText, Trash2, Upload } from 'lucide-react-native'
 import { useCallback, useState } from 'react'
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
@@ -60,13 +60,17 @@ export default function Setting() {
     /** 删除日历事件 */
     const handleUnsubscribe = useCallback(
         (id: number) => {
-            const throttledPush = throttle(() => {
-                handleClearCalendarByAnimeIdMution(id)
-            }, 300)
+            const debounceHandler = debounce(
+                () => {
+                    handleClearCalendarByAnimeIdMution(id)
+                },
+                300,
+                { leading: true, trailing: false }
+            )
 
-            throttledPush()
+            debounceHandler()
 
-            return () => throttledPush.cancel()
+            return () => debounceHandler.cancel()
         },
         [handleClearCalendarByAnimeIdMution]
     )
@@ -89,13 +93,17 @@ export default function Setting() {
 
     /** 删除所有日历事件 */
     const handleUnsubscribeAll = useCallback(() => {
-        const throttledPush = throttle(() => {
-            handleCalendarByAnimeIdListMution(selectedAnimeIdList)
-        }, 300)
+        const debounceHandler = debounce(
+            () => {
+                handleCalendarByAnimeIdListMution(selectedAnimeIdList)
+            },
+            300,
+            { leading: true, trailing: false }
+        )
 
-        throttledPush()
+        debounceHandler()
 
-        return () => throttledPush.cancel()
+        return () => debounceHandler.cancel()
     }, [handleCalendarByAnimeIdListMution, selectedAnimeIdList])
 
     const handleEventSelectAll = (state: CheckboxState) => {

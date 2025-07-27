@@ -14,7 +14,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
-import { throttle } from 'lodash-es'
+import { debounce } from 'lodash-es'
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import DateTimePicker, {
@@ -69,13 +69,17 @@ function AnimeDetail() {
     }, [isLoading, anime])
 
     const handlePress = useCallback(() => {
-        const throttledPush = throttle(() => {
-            router.push(`/editAnime/${anime.id}`)
-        }, 300)
+        const debounceHandler = debounce(
+            () => {
+                router.push(`/editAnime/${anime.id}`)
+            },
+            300,
+            { leading: true, trailing: false }
+        )
 
-        throttledPush()
+        debounceHandler()
 
-        return () => throttledPush.cancel()
+        return () => debounceHandler.cancel()
     }, [router, anime.id])
 
     /** 添加订阅 */
@@ -97,17 +101,24 @@ function AnimeDetail() {
 
     /** 添加订阅 */
     const handleSubscribe = useCallback(() => {
-        const throttledPush = throttle(() => {
-            handleCreateAndBindCalendarMution({
-                animeId: Number(id),
-                ...anime,
-                firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').unix(),
-            })
-        }, 300)
+        const debounceHandler = debounce(
+            () => {
+                handleCreateAndBindCalendarMution({
+                    animeId: Number(id),
+                    ...anime,
+                    firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm, 'YYYY-MM-DD HH:mm').unix(),
+                })
+            },
+            300,
+            {
+                leading: true,
+                trailing: false,
+            }
+        )
 
-        throttledPush()
+        debounceHandler()
 
-        return () => throttledPush.cancel()
+        return () => debounceHandler.cancel()
     }, [anime, id, handleCreateAndBindCalendarMution])
 
     /** 删除订阅 */
@@ -127,13 +138,17 @@ function AnimeDetail() {
 
     /** 删除订阅 */
     const handleUnsubscribe = useCallback(() => {
-        const throttledPush = throttle(() => {
-            handleClearCalendarByAnimeIdMution(Number(id))
-        }, 300)
+        const debounceHandler = debounce(
+            () => {
+                handleClearCalendarByAnimeIdMution(Number(id))
+            },
+            300,
+            { leading: true, trailing: false }
+        )
 
-        throttledPush()
+        debounceHandler()
 
-        return () => throttledPush.cancel()
+        return () => debounceHandler.cancel()
     }, [id, handleClearCalendarByAnimeIdMution])
 
     const status = useMemo<typeof EStatus.valueType>(() => {
@@ -432,7 +447,7 @@ function Day({ day }: { day: CalendarDay }) {
                             'font-archivo text-foreground text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
-                            !isSelected && isToday && 'text-orange-500'
+                            episode && 'text-orange-500'
                         )}
                     >
                         {episode}
