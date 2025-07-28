@@ -189,7 +189,9 @@ export async function updateScheduleTable() {
                 const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
 
                 if (status === EStatus.completed) {
-                    await handleDeleteSchedule(tx, id)
+                    if (!willUpdateThisWeek(firstEpisodeTimestamp)) {
+                        await handleDeleteSchedule(tx, id)
+                    }
                     return true
                 }
             })
