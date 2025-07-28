@@ -134,5 +134,5 @@ export function calcEpisodeThisWeek(firstEpisodeTimestamp: number): number {
     const diffWeeks = mondayThisWeek.diff(firstEpMonday, 'week')
 
     // 本周应该更新到第几集 = 1（第一周）+ diffWeeks
-    return diffWeeks + 1
+    return Math.max(diffWeeks + 1, 0)
 }
