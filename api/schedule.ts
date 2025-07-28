@@ -3,7 +3,7 @@ import { animeTable, scheduleTable } from '@/db/schema'
 import { TTx } from '@/types'
 import { eq } from 'drizzle-orm'
 import { IAddAnimeData, parseAnimeData } from './anime'
-import { createAndBindCalendar } from './calendar'
+import { clearCalendarByAnimeId, createAndBindCalendar } from './calendar'
 
 /**
  * 添加动漫更新表数据
@@ -74,4 +74,14 @@ export async function getScheduleByAnimeId(tx: TTx, animeId: number) {
 export async function handleAddSchedule(tx: TTx, animeId: number, data: IAddAnimeData) {
     await addSchedule(tx, animeId)
     await createAndBindCalendar(tx, animeId, data)
+}
+
+/**
+ * 统一删除连载表和创建日历表和日历事件
+ * @param tx
+ * @param animeId
+ */
+export async function handleDeleteSchedule(tx: TTx, animeId: number) {
+    await deleteScheduleByAnimeId(tx, animeId)
+    await clearCalendarByAnimeId(tx, animeId)
 }

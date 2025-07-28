@@ -118,6 +118,7 @@ export function getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode }:
 
 /**
  * 计算到本周应该更新多少集
+ * @tips     不是已经更新的集数, 所以会大于totalEpisode
  * @param    firstEpisodeTimestamp - 第一集时间戳（秒）
  * @returns 本周应该更新到第几集
  */
