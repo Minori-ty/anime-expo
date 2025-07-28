@@ -1,7 +1,8 @@
 import { IAnime } from '@/api/anime'
 import * as DocumentPicker from 'expo-document-picker'
 import * as FileSystem from 'expo-file-system'
-import RNFS from 'react-native-fs'
+
+const DIR = FileSystem.documentDirectory // 使用应用内私有目录
 
 /**
  * 导出数据为json文件
@@ -15,9 +16,11 @@ export async function exportJsonFile(data: object, filename: string) {
             filename += '.json'
         }
 
-        const path = `${RNFS.ExternalDirectoryPath}/${filename}`
+        const path = `${DIR}${filename}`
         const content = JSON.stringify(data, null, 2)
-        await RNFS.writeFile(path, content, 'utf8')
+        await FileSystem.writeAsStringAsync(path, content, {
+            encoding: FileSystem.EncodingType.UTF8,
+        })
         return true
     } catch (error) {
         console.error('创建 JSON 文件失败:', error)
@@ -31,10 +34,9 @@ export async function exportJsonFile(data: object, filename: string) {
  */
 export async function importJsonFile(): Promise<{ animeList: IAnime[] }> {
     try {
-        // 1. 选择文件
         const result = await DocumentPicker.getDocumentAsync({
-            type: 'application/json', // 限定只选 JSON 文件
-            copyToCacheDirectory: true, // 拷贝一份，确保我们可以读取
+            type: 'application/json',
+            copyToCacheDirectory: true,
         })
 
         if (result.canceled || !result.assets || result.assets.length === 0) {
@@ -43,14 +45,10 @@ export async function importJsonFile(): Promise<{ animeList: IAnime[] }> {
         }
 
         const file = result.assets[0]
-        const fileUri = file.uri // 这是缓存路径，可直接读取
-
-        // 2. 读取文件内容
-        const content = await FileSystem.readAsStringAsync(fileUri, {
+        const content = await FileSystem.readAsStringAsync(file.uri, {
             encoding: FileSystem.EncodingType.UTF8,
         })
 
-        // 3. 尝试解析 JSON
         const data = JSON.parse(content)
         return data
     } catch (error) {
@@ -60,20 +58,27 @@ export async function importJsonFile(): Promise<{ animeList: IAnime[] }> {
 }
 
 /**
- * 扫描私有文件夹中的json文件
+ * 扫描应用私有目录中的json文件
  * @returns
  */
 export async function scanJsonFile() {
+    if (!DIR) return []
     try {
-        const files = await RNFS.readDir(RNFS.ExternalDirectoryPath)
-        const jsonFiles = files
-            .filter(file => file.isFile() && file.name.endsWith('.json'))
-            .map(file => {
-                return {
-                    name: file.name,
-                    size: file.size ?? 0,
+        const files = await FileSystem.readDirectoryAsync(DIR)
+        const jsonFiles: { name: string; size: number }[] = []
+
+        for (const fileName of files) {
+            if (fileName.endsWith('.json')) {
+                const info = await FileSystem.getInfoAsync(`${DIR}${fileName}`)
+                if (info.exists) {
+                    jsonFiles.push({
+                        name: fileName,
+                        size: info.size ?? 0,
+                    })
                 }
-            }) // 👈 只取文件名
+            }
+        }
+
         return jsonFiles
     } catch (error) {
         console.error('扫描 JSON 文件失败:', error)
@@ -92,14 +97,14 @@ export async function deleteJsonFile(fileName: string): Promise<boolean> {
             fileName += '.json'
         }
 
-        const path = `${RNFS.ExternalDirectoryPath}/${fileName}`
-        const exists = await RNFS.exists(path)
-        if (!exists) {
+        const path = `${DIR}${fileName}`
+        const info = await FileSystem.getInfoAsync(path)
+        if (!info.exists) {
             console.warn('文件不存在:', path)
             return false
         }
 
-        await RNFS.unlink(path)
+        await FileSystem.deleteAsync(path)
         return true
     } catch (error) {
         console.error('删除 JSON 文件失败:', error)

@@ -171,24 +171,40 @@ export async function updateScheduleTable() {
 
                 /** 本周应该更新的集数(不是已经更新的集数, 所以shouldEpisodeNum会大于totalEpisode) */
                 const shouldEpisodeNum = calcEpisodeThisWeek(firstEpisodeTimestamp)
-                const currentEpisode = isCurrentWeekdayUpdateTimePassed(
-                    dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
-                )
-                    ? shouldEpisodeNum
-                    : shouldEpisodeNum - 1
+                // console.log('shouldEpisodeNum', shouldEpisodeNum)
 
-                await updateAnimeById(tx, {
-                    animeId: id,
-                    cover,
-                    firstEpisodeTimestamp,
-                    name,
-                    currentEpisode: Math.min(currentEpisode, totalEpisode),
-                    totalEpisode,
-                })
+                const currentEpisode = Math.max(
+                    1,
+                    isCurrentWeekdayUpdateTimePassed(dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm'))
+                        ? shouldEpisodeNum
+                        : shouldEpisodeNum - 1
+                )
+                // console.log('currentEpisode', currentEpisode)
+
                 const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
                 const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
+                if (status === EStatus.serializing) {
+                    await updateAnimeById(tx, {
+                        animeId: id,
+                        cover,
+                        firstEpisodeTimestamp,
+                        name,
+                        currentEpisode: Math.min(currentEpisode, totalEpisode),
+                        totalEpisode,
+                    })
+                    // console.log('更新后', Math.min(currentEpisode, totalEpisode))
 
+                    return true
+                }
                 if (status === EStatus.completed) {
+                    await updateAnimeById(tx, {
+                        animeId: id,
+                        cover,
+                        firstEpisodeTimestamp,
+                        name,
+                        currentEpisode: totalEpisode,
+                        totalEpisode,
+                    })
                     if (!willUpdateThisWeek(firstEpisodeTimestamp)) {
                         await handleDeleteSchedule(tx, id)
                     }
@@ -209,7 +225,7 @@ export async function updateToBeUpdatedTable() {
 
         return await Promise.all(
             toBeUpdatedList.map(async anime => {
-                const { id, firstEpisodeTimestamp, totalEpisode, cover, name } = anime.anime
+                const { id, firstEpisodeTimestamp, totalEpisode } = anime.anime
                 const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
                 const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
 
@@ -222,23 +238,6 @@ export async function updateToBeUpdatedTable() {
                     return true
                 }
 
-                /** 计算出到本周多少集了(不是已经更新的集数, 所以shouldEpisodeNum会大于totalEpisode) */
-                const shouldEpisodeNum = calcEpisodeThisWeek(firstEpisodeTimestamp)
-                const currentEpisode = Math.max(
-                    1,
-                    isCurrentWeekdayUpdateTimePassed(dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm'))
-                        ? shouldEpisodeNum
-                        : shouldEpisodeNum - 1
-                )
-
-                await updateAnimeById(tx, {
-                    animeId: id,
-                    cover,
-                    firstEpisodeTimestamp,
-                    name,
-                    currentEpisode: Math.min(currentEpisode, totalEpisode),
-                    totalEpisode,
-                })
                 await deleteToBeUpdatedByAnimeId(tx, id)
                 if (status === EStatus.serializing) {
                     await addSchedule(tx, id)

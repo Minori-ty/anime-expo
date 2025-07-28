@@ -38,6 +38,7 @@ export default function EditAnime() {
     const { data: data = formData, isLoading } = useQuery({
         queryKey: ['anime-edit', id],
         queryFn: () => handleGetAnimeById(Number(id)),
+        staleTime: 0,
     })
 
     const onSubmit: SubmitHandler<TFormSchema> = async data => {
