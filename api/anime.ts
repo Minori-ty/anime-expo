@@ -102,6 +102,8 @@ export interface IAnime {
  * @returns
  */
 export async function getAnimeList(): Promise<IAnime[]> {
+    const { refreshScheduleAndCalendar } = await import('@/backgroundTasks') // 延迟导入，避免循环引用
+    await refreshScheduleAndCalendar()
     const animeList = await db.select().from(animeTable)
     return animeList.map(item => parseAnimeData(item))
 }
@@ -121,7 +123,7 @@ export async function getAnimeById(tx: TTx, id: number) {
 }
 
 /**
- * 根据name查找动漫
+ * 给创建动漫用的，根据name查找动漫
  * @param tx
  * @param id
  * @returns
@@ -135,7 +137,7 @@ export async function getAnimeByName(name: string) {
 }
 
 /**
- * 根据name查找除了自身id外的动漫
+ * 给编辑动漫用的，根据name查找除了自身id外的动漫
  * @param tx
  * @param id
  * @returns

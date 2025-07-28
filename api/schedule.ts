@@ -1,4 +1,3 @@
-import { refreshScheduleAndCalendar } from '@/backgroundTasks'
 import { db } from '@/db'
 import { animeTable, scheduleTable } from '@/db/schema'
 import { TTx } from '@/types'
@@ -45,7 +44,9 @@ export async function deleteScheduleByAnimeId(tx: TTx, animeId: number) {
  * @returns
  */
 export async function getScheduleList(): Promise<IAnime[]> {
+    const { refreshScheduleAndCalendar } = await import('@/backgroundTasks') // 延迟导入，避免循环引用
     await refreshScheduleAndCalendar()
+
     const result = await db.select().from(scheduleTable).innerJoin(animeTable, eq(animeTable.id, scheduleTable.animeId))
     const animeList = result.map(item => parseAnimeData(item.anime))
 
