@@ -162,7 +162,11 @@ export async function updateScheduleTable() {
                             cover,
                             firstEpisodeTimestamp,
                             name,
-                            currentEpisode: shouldEpisodeNum,
+                            currentEpisode: isCurrentWeekdayUpdateTimePassed(
+                                dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
+                            )
+                                ? shouldEpisodeNum
+                                : shouldEpisodeNum - 1,
                             totalEpisode,
                         })
                     }
