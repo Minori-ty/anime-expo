@@ -222,13 +222,14 @@ export async function updateToBeUpdatedTable() {
                     return true
                 }
 
-                /** 本周应该更新的集数(不是已经更新的集数, 所以shouldEpisodeNum会大于totalEpisode) */
+                /** 计算出到本周多少集了(不是已经更新的集数, 所以shouldEpisodeNum会大于totalEpisode) */
                 const shouldEpisodeNum = calcEpisodeThisWeek(firstEpisodeTimestamp)
-                const currentEpisode = isCurrentWeekdayUpdateTimePassed(
-                    dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
+                const currentEpisode = Math.max(
+                    0,
+                    isCurrentWeekdayUpdateTimePassed(dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm'))
+                        ? shouldEpisodeNum
+                        : shouldEpisodeNum - 1
                 )
-                    ? shouldEpisodeNum
-                    : shouldEpisodeNum - 1
 
                 await updateAnimeById(tx, {
                     animeId: id,

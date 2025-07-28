@@ -434,7 +434,7 @@ function Day(day: CalendarDay) {
                     'font-archivo text-foreground top-2',
                     !isCurrentMonth && 'text-gray-200',
                     isSelected && isToday && 'text-white',
-                    !isSelected && isToday && 'text-blue-500'
+                    isCurrentMonth && !isSelected && isToday && 'text-blue-500'
                 )}
             >
                 {day.text}
@@ -447,7 +447,7 @@ function Day(day: CalendarDay) {
                             'font-archivo text-foreground text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
-                            episode && 'text-orange-500'
+                            isCurrentMonth && episode && 'text-orange-500'
                         )}
                     >
                         {episode}
