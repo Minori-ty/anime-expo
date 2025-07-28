@@ -1,4 +1,5 @@
 import { db } from '@/db'
+import { animeTable, scheduleTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import {
     calcEpisodeThisWeek,
@@ -9,15 +10,10 @@ import {
     willUpdateThisWeek,
 } from '@/utils/time'
 import dayjs from 'dayjs'
-import { addAnime, addAnimeList, deleteAnimeById, updateAnimeById, type IAddAnimeData } from './anime'
+import { eq } from 'drizzle-orm'
+import { addAnime, addAnimeList, deleteAnimeById, parseAnimeData, updateAnimeById, type IAddAnimeData } from './anime'
 import { clearCalendarByAnimeId, handleCreateAndBindCalendar } from './calendar'
-import {
-    addSchedule,
-    deleteScheduleByAnimeId,
-    getScheduleList,
-    handleAddSchedule,
-    handleDeleteSchedule,
-} from './schedule'
+import { addSchedule, deleteScheduleByAnimeId, handleAddSchedule, handleDeleteSchedule } from './schedule'
 import { addToBeUpdatedByAnimeId, deleteToBeUpdatedByAnimeId, getToBeUpdatedList } from './toBeUpdated'
 export { getAnimeList } from './anime'
 
@@ -162,7 +158,11 @@ export async function handleUpdateAnime({
  */
 export async function updateScheduleTable() {
     return await db.transaction(async tx => {
-        const scheduleList = await getScheduleList()
+        const result = await tx
+            .select()
+            .from(scheduleTable)
+            .innerJoin(animeTable, eq(animeTable.id, scheduleTable.animeId))
+        const scheduleList = result.map(item => parseAnimeData(item.anime))
 
         return await Promise.all(
             scheduleList.map(async anime => {

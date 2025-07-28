@@ -1,8 +1,9 @@
+import { refreshScheduleAndCalendar } from '@/backgroundTasks'
 import { db } from '@/db'
 import { animeTable, scheduleTable } from '@/db/schema'
 import { TTx } from '@/types'
 import { eq } from 'drizzle-orm'
-import { IAddAnimeData, parseAnimeData } from './anime'
+import { IAddAnimeData, IAnime, parseAnimeData } from './anime'
 import { clearCalendarByAnimeId, createAndBindCalendar } from './calendar'
 
 /**
@@ -43,7 +44,8 @@ export async function deleteScheduleByAnimeId(tx: TTx, animeId: number) {
  * 获取所有更新表数据
  * @returns
  */
-export async function getScheduleList() {
+export async function getScheduleList(): Promise<IAnime[]> {
+    await refreshScheduleAndCalendar()
     const result = await db.select().from(scheduleTable).innerJoin(animeTable, eq(animeTable.id, scheduleTable.animeId))
     const animeList = result.map(item => parseAnimeData(item.anime))
 

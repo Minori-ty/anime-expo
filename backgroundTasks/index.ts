@@ -34,5 +34,5 @@ export async function registerBackgroundTask() {
 }
 
 export async function refreshScheduleAndCalendar() {
-    return Promise.all([updateScheduleTable(), updateToBeUpdatedTable()])
+    return await Promise.all([updateScheduleTable(), updateToBeUpdatedTable()])
 }
