@@ -225,7 +225,7 @@ export async function updateToBeUpdatedTable() {
                 /** 计算出到本周多少集了(不是已经更新的集数, 所以shouldEpisodeNum会大于totalEpisode) */
                 const shouldEpisodeNum = calcEpisodeThisWeek(firstEpisodeTimestamp)
                 const currentEpisode = Math.max(
-                    0,
+                    1,
                     isCurrentWeekdayUpdateTimePassed(dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm'))
                         ? shouldEpisodeNum
                         : shouldEpisodeNum - 1
