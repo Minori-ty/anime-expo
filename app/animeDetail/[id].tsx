@@ -210,6 +210,12 @@ function AnimeDetail() {
         queryClient.invalidateQueries({
             queryKey: ['anime-detail', id],
         })
+        queryClient.invalidateQueries({
+            queryKey: ['my-anime'],
+        })
+        queryClient.invalidateQueries({
+            queryKey: ['schedule'],
+        })
         queryClient.invalidateQueries({ queryKey: ['update-anime-currentEpisode'] })
     }
 
@@ -463,14 +469,14 @@ function Day(day: CalendarDay) {
             className={cn(
                 'relative w-full flex-1 items-center rounded border border-transparent bg-white',
                 isSelected && 'border border-blue-500',
-                isSelected && isToday && 'bg-blue-500'
+                isCurrentMonth && isSelected && isToday && 'bg-blue-500'
             )}
         >
             <Text
                 className={cn(
                     'font-archivo text-foreground top-2',
-                    !isCurrentMonth && 'text-gray-200',
                     isSelected && isToday && 'text-white',
+                    !isCurrentMonth && 'text-gray-200',
                     isCurrentMonth && !isSelected && isToday && 'text-blue-500'
                 )}
             >
