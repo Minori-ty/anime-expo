@@ -1,4 +1,3 @@
-import { cn } from '@/utils/nativewind'
 import React, { useEffect, useState } from 'react'
 import { Pressable, Modal as RNModal, Text, View } from 'react-native'
 import { Modal, ModalOptions } from './index'
@@ -30,6 +29,7 @@ function Index() {
             Modal.unregister()
         }
     }, [])
+
     return (
         <RNModal transparent visible={visible} animationType="fade" onRequestClose={handleClose}>
             <Pressable
@@ -44,14 +44,14 @@ function Index() {
                             {options?.body}
                         </View>
                         <View className="mt-5 flex-row justify-end">
-                            <View className="">
+                            <View>
                                 <Pressable onPress={handleClose} className="h-7 w-16 items-center justify-center">
-                                    <Text className={cn('text-base', 'text-theme')}>取消</Text>
+                                    <Text className="text-base text-theme">取消</Text>
                                 </Pressable>
                             </View>
                             <View>
                                 <Pressable onPress={handleConfirm} className="h-7 w-16 items-center justify-center">
-                                    <Text className={cn('text-base', 'text-theme')}>删除</Text>
+                                    <Text className="text-base text-theme">删除</Text>
                                 </Pressable>
                             </View>
                         </View>

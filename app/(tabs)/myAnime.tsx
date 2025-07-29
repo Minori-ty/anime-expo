@@ -163,14 +163,19 @@ const AnimeContainerItem = memo(function AnimeContainerItem({ data }: IAnimeCont
             delayLongPress={300}
             style={{ width: (Dimensions.get('window').width - GAP * 4) / 3 }}
         >
-            <View className="flex-1 overflow-hidden rounded-lg bg-sky-300">
+            <View
+                className={cn(
+                    'overflow-hidden rounded-lg',
+                    `h-${((Dimensions.get('window').width - GAP * 4) / 3) * 1.5}px`
+                )}
+            >
                 <Image
                     source={data.cover}
                     placeholder={{ blurhash }}
                     contentFit="cover"
                     transition={500}
                     cachePolicy={'memory-disk'}
-                    style={styles.image}
+                    style={styles.cover}
                 />
                 <UpdateLabel status={data.status} />
             </View>
@@ -221,7 +226,7 @@ function UpdateLabel({ status }: IUpdateLabelProps) {
 }
 
 const styles = StyleSheet.create({
-    image: {
+    cover: {
         width: (Dimensions.get('window').width - GAP * 4) / 3,
         height: ((Dimensions.get('window').width - GAP * 4) / 3) * 1.5,
     },

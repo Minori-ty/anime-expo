@@ -181,7 +181,7 @@ interface IParseAnimeData {
  * @returns
  */
 export function parseAnimeData(data: IParseAnimeData): DeepExpand<IAnime> {
-    const { id, name, currentEpisode, totalEpisode, cover, firstEpisodeTimestamp } = data
+    const { id, name, totalEpisode, cover, firstEpisodeTimestamp, currentEpisode } = data
     const updateWeekday = dayjs.unix(firstEpisodeTimestamp).isoWeekday() as typeof EWeekday.valueType
     const firstEpisodeYYYYMMDDHHmm = dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm')
     const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })

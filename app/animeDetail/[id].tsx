@@ -7,7 +7,7 @@ import { EStatus, EWeekday } from '@/enums'
 import { blurhash, themeColorPurple } from '@/styles'
 import { cn } from '@/utils/nativewind'
 import { queryClient } from '@/utils/react-query'
-import { getStatus } from '@/utils/time'
+import { getcurrentEpisode, getStatus } from '@/utils/time'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { type ClassValue } from 'clsx'
 import dayjs from 'dayjs'
@@ -161,6 +161,7 @@ function AnimeDetail() {
         navigation.setOptions({
             headerTitle: '动漫详情',
             headerTitleAlign: 'center',
+            // eslint-disable-next-line react/no-unstable-nested-components
             headerRight: () => {
                 return (
                     <TouchableOpacity onPress={handlePress}>
@@ -170,10 +171,14 @@ function AnimeDetail() {
             },
         })
     }, [navigation, handlePress])
-
     const progress = useMemo(() => {
-        return Math.round((anime.currentEpisode / anime.totalEpisode) * 100)
-    }, [anime.currentEpisode, anime.totalEpisode])
+        const currentEpisode = getcurrentEpisode({
+            firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm).unix(),
+            lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
+            totalEpisode: anime.totalEpisode,
+        })
+        return Math.round((currentEpisode / anime.totalEpisode) * 100)
+    }, [anime.firstEpisodeYYYYMMDDHHmm, anime.lastEpisodeYYYYMMDDHHmm, anime.totalEpisode])
 
     const defaultStyles = useDefaultStyles()
 
@@ -272,7 +277,12 @@ function AnimeDetail() {
                                     <View className="mb-2 flex-row items-center justify-between">
                                         <Text className="text-sm text-gray-600">更新进度</Text>
                                         <Text className="text-sm font-medium text-blue-600">
-                                            {anime.currentEpisode} / {anime.totalEpisode} 集
+                                            {getcurrentEpisode({
+                                                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
+                                                lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
+                                                totalEpisode: anime.totalEpisode,
+                                            })}
+                                            / {anime.totalEpisode} 集
                                         </Text>
                                     </View>
                                     <View className="h-2 overflow-hidden rounded-full bg-gray-200">
@@ -291,7 +301,13 @@ function AnimeDetail() {
                                         <Text className="text-xs text-gray-500">总集数</Text>
                                     </View>
                                     <View className="items-center">
-                                        <Text className="text-lg font-bold text-green-600">{anime.currentEpisode}</Text>
+                                        <Text className="text-lg font-bold text-green-600">
+                                            {getcurrentEpisode({
+                                                firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm).unix(),
+                                                lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
+                                                totalEpisode: anime.totalEpisode,
+                                            })}
+                                        </Text>
                                         <Text className="text-xs text-gray-500">已更新</Text>
                                     </View>
                                     <View className="items-center">
@@ -385,7 +401,9 @@ function AnimeDetail() {
                             styles={defaultStyles}
                             mode="single"
                             date={firstEpisodeYYYYMMDDHHmm}
-                            onChange={day => setFirstEpisodeYYYYMMDDHHmm(day.date)}
+                            onChange={day => {
+                                setFirstEpisodeYYYYMMDDHHmm(day.date)
+                            }}
                             firstDayOfWeek={1}
                             multiRangeMode
                             showOutsideDays
@@ -442,13 +460,13 @@ function Day(day: CalendarDay) {
             {
                 <View className="absolute bottom-2 w-full">
                     <Text
-                        style={styles.episodeText}
                         className={cn(
                             'font-archivo text-foreground text-center',
                             !isCurrentMonth && 'text-gray-200',
                             isSelected && isToday && 'text-white',
                             isCurrentMonth && episode && 'text-orange-500'
                         )}
+                        style={styles.episodeText}
                     >
                         {episode}
                     </Text>

@@ -117,7 +117,7 @@ export function getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode }:
 }
 
 /**
- * 计算到本周应该更新多少集
+ * 计算到本周应该更新多少集 大于0
  * @tips     不是已经更新的集数, 所以会大于totalEpisode
  * @param    firstEpisodeTimestamp - 第一集时间戳（秒）
  * @returns 本周应该更新到第几集
@@ -127,4 +127,34 @@ export function calcEpisodeThisWeek(firstEpisodeTimestamp: number): number {
     const sundaayDay = dayjs.unix(getSundayTimestampInThisWeek())
     const diffWeeks = sundaayDay.diff(firstEpisodeDayjs, 'week')
     return Math.max(0, diffWeeks + 1)
+}
+
+interface IGetcurrentEpisode {
+    firstEpisodeTimestamp: number
+    lastEpisodeTimestamp: number
+    totalEpisode: number
+}
+export function getcurrentEpisode({ firstEpisodeTimestamp, lastEpisodeTimestamp, totalEpisode }: IGetcurrentEpisode) {
+    /** 本周应该更新的集数(不是已经更新的集数, 所以shouldEpisodeNum会大于totalEpisode) */
+    const shouldEpisodeNum = calcEpisodeThisWeek(firstEpisodeTimestamp)
+
+    const status = getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
+
+    if (status === EStatus.completed) {
+        return totalEpisode
+    }
+
+    if (status === EStatus.toBeUpdated) {
+        return 0
+    }
+
+    if (status === EStatus.serializing) {
+        return Math.max(
+            1,
+            isCurrentWeekdayUpdateTimePassed(dayjs.unix(firstEpisodeTimestamp).format('YYYY-MM-DD HH:mm'))
+                ? shouldEpisodeNum
+                : shouldEpisodeNum - 1
+        )
+    }
+    return -999
 }

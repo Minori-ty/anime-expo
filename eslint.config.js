@@ -46,6 +46,7 @@ module.exports = defineConfig([
                 },
             ],
             'react/no-unstable-nested-components': 'error',
+            'tailwindcss/classnames-order': 'off',
         },
         // 设置React版本（帮助eslint-plugin-react正确工作）
         settings: {
