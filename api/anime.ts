@@ -81,7 +81,7 @@ export async function updateAnimeById(tx: TTx, data: IUpdateAnimeByAnimeId) {
             createdAt: dayjs().unix(),
         })
         .where(eq(animeTable.id, data.animeId))
-    console.log('更新动漫数据成功')
+    // console.log('更新动漫数据成功')
 }
 
 export interface IAnime {

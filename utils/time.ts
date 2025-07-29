@@ -13,15 +13,17 @@ function getUpdateWeekday(YYYYMMDDHHmm: string) {
  */
 export function getStatus(firstEpisodeTimestamp: number, lastEpisodeTimestamp: number) {
     const now = dayjs().unix()
+
     if (now < firstEpisodeTimestamp) {
         return EStatus.toBeUpdated
-    } else if (now >= firstEpisodeTimestamp && now <= lastEpisodeTimestamp) {
+    }
+
+    if (now >= firstEpisodeTimestamp && now < lastEpisodeTimestamp) {
         return EStatus.serializing
     } else {
         return EStatus.completed
     }
 }
-
 /**
  * 判断连载中的动漫是否到了更新时间点
  * @param YYYYMMDDHHmm

@@ -154,6 +154,7 @@ function AnimeDetail() {
     const status = useMemo<typeof EStatus.valueType>(() => {
         const firstEpisodeTimestamp = dayjs(anime.firstEpisodeYYYYMMDDHHmm).second(0).unix()
         const lastEpisodeTimestamp = dayjs(anime.lastEpisodeYYYYMMDDHHmm).second(0).unix()
+
         return getStatus(firstEpisodeTimestamp, lastEpisodeTimestamp)
     }, [anime.firstEpisodeYYYYMMDDHHmm, anime.lastEpisodeYYYYMMDDHHmm])
 
@@ -171,14 +172,6 @@ function AnimeDetail() {
             },
         })
     }, [navigation, handlePress])
-    const progress = useMemo(() => {
-        const currentEpisode = getcurrentEpisode({
-            firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm).unix(),
-            lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
-            totalEpisode: anime.totalEpisode,
-        })
-        return Math.round((currentEpisode / anime.totalEpisode) * 100)
-    }, [anime.firstEpisodeYYYYMMDDHHmm, anime.lastEpisodeYYYYMMDDHHmm, anime.totalEpisode])
 
     const defaultStyles = useDefaultStyles()
 
@@ -288,10 +281,36 @@ function AnimeDetail() {
                                     <View className="h-2 overflow-hidden rounded-full bg-gray-200">
                                         <View
                                             className="h-full rounded-full bg-blue-500"
-                                            style={{ width: `${progress}%` }}
+                                            style={{
+                                                width: `${Math.round(
+                                                    (getcurrentEpisode({
+                                                        firstEpisodeTimestamp: dayjs(
+                                                            anime.firstEpisodeYYYYMMDDHHmm
+                                                        ).unix(),
+                                                        lastEpisodeTimestamp: dayjs(
+                                                            anime.lastEpisodeYYYYMMDDHHmm
+                                                        ).unix(),
+                                                        totalEpisode: anime.totalEpisode,
+                                                    }) /
+                                                        anime.totalEpisode) *
+                                                        100
+                                                )}%`,
+                                            }}
                                         />
                                     </View>
-                                    <Text className="mt-1 text-xs text-gray-500">完成度 {progress}%</Text>
+                                    <Text className="mt-1 text-xs text-gray-500">
+                                        完成度{' '}
+                                        {Math.round(
+                                            (getcurrentEpisode({
+                                                firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm).unix(),
+                                                lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
+                                                totalEpisode: anime.totalEpisode,
+                                            }) /
+                                                anime.totalEpisode) *
+                                                100
+                                        )}
+                                        %
+                                    </Text>
                                 </View>
 
                                 {/* Quick Stats */}
