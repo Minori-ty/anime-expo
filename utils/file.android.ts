@@ -34,8 +34,7 @@ export async function importJsonFile(): Promise<{ animeList: IAnime[] }> {
     })
 
     if (result.canceled || !result.assets || result.assets.length === 0) {
-        console.log('用户取消选择')
-        return { animeList: [] }
+        throw Error('用户取消选择')
     }
 
     const file = result.assets[0]

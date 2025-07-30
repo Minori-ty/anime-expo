@@ -267,7 +267,7 @@ export default function Setting() {
             onError: err => {
                 Toast.show({
                     type: 'error',
-                    text1: '导入失败！' + err,
+                    text1: err.message,
                 })
             },
         })
