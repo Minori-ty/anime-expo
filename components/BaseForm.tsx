@@ -100,11 +100,12 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
     useUpdateEffect(() => {
         console.log('触发update')
         trigger(['currentEpisode', 'totalEpisode', 'firstEpisodeYYYYMMDDHHmm'])
-    }, [totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm])
+    }, [totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm, status])
 
     const onSubmit: SubmitHandler<TFormSchema> = async data => {
         submit(data)
     }
+
     const getLastEpisodeDateTime = useMemo<string>(() => {
         if (totalEpisode < 1) {
             return '-'
@@ -327,15 +328,20 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
             <Controller
                 control={control}
                 name="firstEpisodeYYYYMMDDHHmm"
-                render={({ field }) => (
-                    <DatePicker
-                        ref={datepickerRef}
-                        date={field.value}
-                        onChange={date => {
-                            field.onChange(dayjs(date).format('YYYY-MM-DD HH:mm'))
-                        }}
-                    />
-                )}
+                render={({ field }) => {
+                    console.log(field.value)
+                    console.log(fullErrors.firstEpisodeYYYYMMDDHHmm)
+
+                    return (
+                        <DatePicker
+                            ref={datepickerRef}
+                            date={field.value}
+                            onChange={date => {
+                                field.onChange(dayjs(date).format('YYYY-MM-DD HH:mm'))
+                            }}
+                        />
+                    )
+                }}
             />
             <Controller
                 control={control}

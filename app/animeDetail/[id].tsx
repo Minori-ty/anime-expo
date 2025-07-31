@@ -181,6 +181,14 @@ function AnimeDetail() {
         refetchOnWindowFocus: true,
     })
 
+    const currentEpisode = useMemo(() => {
+        return getcurrentEpisode({
+            firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm).unix(),
+            lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
+            totalEpisode: anime.totalEpisode,
+        })
+    }, [anime.firstEpisodeYYYYMMDDHHmm, anime.lastEpisodeYYYYMMDDHHmm, anime.totalEpisode])
+
     if (isLoading || !anime) {
         return <Loading />
     }
@@ -276,46 +284,19 @@ function AnimeDetail() {
                                     <View className="mb-2 flex-row items-center justify-between">
                                         <Text className="text-sm text-gray-600">更新进度</Text>
                                         <Text className="text-sm font-medium text-blue-600">
-                                            {getcurrentEpisode({
-                                                firstEpisodeTimestamp: dayjs(firstEpisodeYYYYMMDDHHmm).unix(),
-                                                lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
-                                                totalEpisode: anime.totalEpisode,
-                                            })}
-                                            / {anime.totalEpisode} 集
+                                            {currentEpisode} / {anime.totalEpisode} 集
                                         </Text>
                                     </View>
                                     <View className="h-2 overflow-hidden rounded-full bg-gray-200">
                                         <View
                                             className="h-full rounded-full bg-blue-500"
                                             style={{
-                                                width: `${Math.round(
-                                                    (getcurrentEpisode({
-                                                        firstEpisodeTimestamp: dayjs(
-                                                            anime.firstEpisodeYYYYMMDDHHmm
-                                                        ).unix(),
-                                                        lastEpisodeTimestamp: dayjs(
-                                                            anime.lastEpisodeYYYYMMDDHHmm
-                                                        ).unix(),
-                                                        totalEpisode: anime.totalEpisode,
-                                                    }) /
-                                                        anime.totalEpisode) *
-                                                        100
-                                                )}%`,
+                                                width: `${Math.round((currentEpisode / anime.totalEpisode) * 100)}%`,
                                             }}
                                         />
                                     </View>
                                     <Text className="mt-1 text-xs text-gray-500">
-                                        完成度{' '}
-                                        {Math.round(
-                                            (getcurrentEpisode({
-                                                firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm).unix(),
-                                                lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
-                                                totalEpisode: anime.totalEpisode,
-                                            }) /
-                                                anime.totalEpisode) *
-                                                100
-                                        )}
-                                        %
+                                        完成度 {Math.round((currentEpisode / anime.totalEpisode) * 100)}%
                                     </Text>
                                 </View>
 
@@ -326,13 +307,7 @@ function AnimeDetail() {
                                         <Text className="text-xs text-gray-500">总集数</Text>
                                     </View>
                                     <View className="items-center">
-                                        <Text className="text-lg font-bold text-green-600">
-                                            {getcurrentEpisode({
-                                                firstEpisodeTimestamp: dayjs(anime.firstEpisodeYYYYMMDDHHmm).unix(),
-                                                lastEpisodeTimestamp: dayjs(anime.lastEpisodeYYYYMMDDHHmm).unix(),
-                                                totalEpisode: anime.totalEpisode,
-                                            })}
-                                        </Text>
+                                        <Text className="text-lg font-bold text-green-600">{}</Text>
                                         <Text className="text-xs text-gray-500">已更新</Text>
                                     </View>
                                     <View className="items-center">
