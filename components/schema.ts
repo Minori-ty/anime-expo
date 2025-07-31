@@ -70,14 +70,14 @@ const formSchema = z
         if (val.status === EStatus.completed) {
             const { totalEpisode, firstEpisodeYYYYMMDDHHmm } = val
             const firstEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
-            if (firstEpisodeYYYYMMDDHHmm === undefined) {
+            if (firstEpisodeYYYYMMDDHHmm === '') {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,
                     path: ['firstEpisodeYYYYMMDDHHmm'],
                     message: '请选择日期',
                 })
             }
-            if (totalEpisode !== 0 && totalEpisode !== undefined) {
+            if (totalEpisode !== 0) {
                 if (firstEpisodeTimestamp > dayjs().unix()) {
                     ctx.addIssue({
                         code: ZodIssueCode.custom,
@@ -102,7 +102,7 @@ const formSchema = z
             const firstEpisodeTimestamp = dayjs(`${firstEpisodeYYYYMMDDHHmm}`).unix()
             const lastEpisodeTimestamp = getLastEpisodeTimestamp({ firstEpisodeTimestamp, totalEpisode })
 
-            if (firstEpisodeYYYYMMDDHHmm === undefined) {
+            if (firstEpisodeYYYYMMDDHHmm === '') {
                 ctx.addIssue({
                     code: ZodIssueCode.custom,
                     path: ['firstEpisodeYYYYMMDDHHmm'],
@@ -110,7 +110,7 @@ const formSchema = z
                 })
             }
 
-            if (totalEpisode !== 0 && totalEpisode !== undefined) {
+            if (totalEpisode !== 0) {
                 if (firstEpisodeTimestamp < dayjs().unix() && lastEpisodeTimestamp > dayjs().unix()) {
                     ctx.addIssue({
                         code: ZodIssueCode.custom,

@@ -1,5 +1,5 @@
 import { themeColor } from '@/styles'
-import { cn } from '@/utils/nativewind'
+import { cn } from '@/utils/cn'
 import { type ClassValue } from 'clsx'
 import React from 'react'
 import { Text, TextStyle, TouchableOpacity, View, ViewStyle } from 'react-native'

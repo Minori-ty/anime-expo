@@ -1,4 +1,4 @@
-import { cn } from '@/utils/nativewind'
+import { cn } from '@/utils/cn'
 import { type ClassValue } from 'clsx'
 import React, { Fragment } from 'react'
 import { Text, View } from 'react-native'

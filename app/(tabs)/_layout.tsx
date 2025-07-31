@@ -7,7 +7,7 @@ import { HapticTab } from '@/components/HapticTab'
 import Icon from '@/components/ui/Icon'
 import TabBarBackground from '@/components/ui/TabBarBackground'
 import { themeColorPurple } from '@/styles'
-import { cn } from '@/utils/nativewind'
+import { cn } from '@/utils/cn'
 import { useQuery } from '@tanstack/react-query'
 
 export default function TabLayout() {

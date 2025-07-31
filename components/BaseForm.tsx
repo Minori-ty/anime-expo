@@ -1,10 +1,10 @@
 import DatePicker, { type IDatePickerRef } from '@/components/Datepicker'
 import { EStatus, EWeekday } from '@/enums'
-import { useUpdateEffect } from '@/hooks/useUpdateEffect'
-import { cn } from '@/utils/nativewind'
+import { cn } from '@/utils/cn'
 import { getFirstEpisodeTimestamp } from '@/utils/time'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Picker } from '@react-native-picker/picker'
+import { useUpdateEffect } from 'ahooks'
 import dayjs from 'dayjs'
 import { useNavigation } from 'expo-router'
 import React, { PropsWithChildren, useEffect, useMemo, useRef } from 'react'
@@ -98,8 +98,9 @@ export default function BaseForm({ formData, onSubmit: submit }: IBaseAnimeFormP
     ])
 
     useUpdateEffect(() => {
+        console.log('触发update')
         trigger(['currentEpisode', 'totalEpisode', 'firstEpisodeYYYYMMDDHHmm'])
-    }, [trigger, totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm])
+    }, [totalEpisode, currentEpisode, firstEpisodeYYYYMMDDHHmm])
 
     const onSubmit: SubmitHandler<TFormSchema> = async data => {
         submit(data)

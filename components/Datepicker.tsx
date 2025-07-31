@@ -38,6 +38,7 @@ const DatePicker = forwardRef<IDatePickerRef, IDatepickerProps>(
             <BottomSheetModal
                 ref={bottomSheetModalRef}
                 enableContentPanningGesture={false}
+                // eslint-disable-next-line react/no-unstable-nested-components
                 backdropComponent={() => (
                     <TouchableOpacity activeOpacity={1} style={styles.backdrop} onPress={handleClose} />
                 )}
