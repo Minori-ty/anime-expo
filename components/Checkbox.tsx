@@ -1,5 +1,6 @@
 'use client'
 
+import { type ClassValue } from 'clsx'
 import { Check, Minus } from 'lucide-react-native'
 import { useState } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
@@ -20,11 +21,11 @@ interface CheckboxProps {
     /** 标签文本 */
     label?: string
     /** 自定义样式类名 */
-    className?: string
+    className?: ClassValue
     /** 大小 */
     size?: 'sm' | 'md' | 'lg'
     /** 标签样式 */
-    labelClassName?: string
+    labelClassName?: ClassValue
 }
 
 export default function Checkbox({
@@ -98,7 +99,7 @@ export default function Checkbox({
     }
 
     const getCheckboxClasses = () => {
-        const baseClasses = `${getSizeClasses()} rounded border-2 items-center justify-center`
+        const baseClasses: ClassValue = `${getSizeClasses()} rounded border items-center justify-center`
 
         if (disabled) {
             return `${baseClasses} opacity-50`
