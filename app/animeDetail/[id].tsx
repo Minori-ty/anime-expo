@@ -307,7 +307,7 @@ function AnimeDetail() {
                                         <Text className="text-xs text-gray-500">总集数</Text>
                                     </View>
                                     <View className="items-center">
-                                        <Text className="text-lg font-bold text-green-600">{}</Text>
+                                        <Text className="text-lg font-bold text-green-600">{currentEpisode}</Text>
                                         <Text className="text-xs text-gray-500">已更新</Text>
                                     </View>
                                     <View className="items-center">

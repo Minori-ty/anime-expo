@@ -112,16 +112,6 @@ const config = {
         experiments: {
             typedRoutes: true,
         },
-        // backgroundTasks: [
-        //     {
-        //         taskName: 'REFRESH_SCHEDULE_AND_CALENDAR',
-        //         allowsNetworking: true,
-        //         minInterval: 60 * 15, // 1分钟（单位：秒）
-        //         android: {
-        //             permission: ['RECEIVE_BOOT_COMPLETED'],
-        //         },
-        //     },
-        // ],
         extra: {
             eas: {
                 projectId: '277b7d6d-d578-473a-99f9-534f0cb4bcfa',
