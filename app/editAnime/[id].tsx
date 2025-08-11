@@ -83,12 +83,6 @@ export default function EditAnime() {
         mutationFn: handleUpdateAnime,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['my-anime'],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['schedule'],
-            })
-            queryClient.invalidateQueries({
                 queryKey: ['anime-detail', id],
             })
             queryClient.invalidateQueries({

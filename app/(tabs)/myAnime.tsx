@@ -1,19 +1,23 @@
-import { getAnimeList, handleDeleteAnime } from '@/api'
+import { handleDeleteAnime } from '@/api'
+import { parseAnimeData } from '@/api/anime'
 import Loading from '@/components/lottie/Loading'
 import { Modal } from '@/components/Modal'
 import PageHeader from '@/components/PageHeader'
 import Icon from '@/components/ui/Icon'
 import { IconSymbol } from '@/components/ui/IconSymbol'
+import { db } from '@/db'
+import { animeTable } from '@/db/schema'
 import { EStatus } from '@/enums'
 import { blurhash, themeColorPurple } from '@/styles'
 import { TAnimeList } from '@/types'
 import { cn } from '@/utils/cn'
 import { queryClient } from '@/utils/react-query'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { debounce } from 'lodash-es'
-import React, { createContext, memo, useCallback, useContext } from 'react'
+import React, { createContext, memo, useCallback, useContext, useMemo } from 'react'
 import {
     Dimensions,
     FlatList,
@@ -45,14 +49,17 @@ const useMyAnimeContext = () => {
 export default function MyAnime() {
     const router = useRouter()
 
-    const { data: list = [], isLoading } = useQuery({
-        queryKey: ['my-anime'],
-        queryFn: getAnimeList,
-    })
+    const { data, updatedAt } = useLiveQuery(db.select().from(animeTable))
+    const list = useMemo(() => {
+        return data.map(item => parseAnimeData(item))
+    }, [data])
+
+    const isLoading = useMemo(() => {
+        return !updatedAt
+    }, [updatedAt])
 
     const onRefetch = useCallback(() => {
         queryClient.invalidateQueries({ queryKey: ['update-anime-currentEpisode'] })
-        queryClient.invalidateQueries({ queryKey: ['my-anime'] })
     }, [])
 
     const { mutate: handleDeleteAnimeMutation } = useMutation({
@@ -61,12 +68,7 @@ export default function MyAnime() {
             queryClient.invalidateQueries({
                 queryKey: ['search'],
             })
-            queryClient.invalidateQueries({
-                queryKey: ['my-anime'],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['schedule'],
-            })
+
             queryClient.invalidateQueries({
                 queryKey: ['settings-calendar'],
             })
@@ -191,9 +193,7 @@ function Empty() {
     const queryState = queryClient.getQueryState(['my-anime'])
 
     const isLoading = queryState?.fetchStatus === 'fetching'
-    function refetch() {
-        queryClient.invalidateQueries({ queryKey: ['my-anime'] })
-    }
+    function refetch() {}
     return (
         <ScrollView
             contentContainerStyle={styles.center}

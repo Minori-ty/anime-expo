@@ -60,12 +60,6 @@ export default function Index() {
         mutationFn: handleAddAnime,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['my-anime'],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['schedule'],
-            })
-            queryClient.invalidateQueries({
                 queryKey: ['settings-calendar'],
             })
 

@@ -254,12 +254,6 @@ export default function Setting() {
             mutationFn: handleImportJsonFileToData,
             onSuccess: () => {
                 queryClient.invalidateQueries({
-                    queryKey: ['my-anime'],
-                })
-                queryClient.invalidateQueries({
-                    queryKey: ['schedule'],
-                })
-                queryClient.invalidateQueries({
                     queryKey: ['settings-calendar'],
                 })
                 Toast.show({
@@ -279,12 +273,6 @@ export default function Setting() {
         mutationFn: deleteJsonFile,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['my-anime'],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ['schedule'],
-            })
-            queryClient.invalidateQueries({
                 queryKey: ['settings-calendar'],
             })
             queryClient.invalidateQueries({
@@ -300,9 +288,6 @@ export default function Setting() {
     const { mutate: deleteJsonFileListMution } = useMutation({
         mutationFn: deleteJsonFileList,
         onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ['my-anime'],
-            })
             queryClient.invalidateQueries({
                 queryKey: ['schedule'],
             })
