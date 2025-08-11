@@ -195,7 +195,10 @@ export default function Setting() {
         const jsonData = await importJsonFile()
         const result = validateJsonData.safeParse(jsonData)
         if (!result.success) {
-            console.log('json数据校验失败，不符合格式')
+            Toast.show({
+                type: 'error',
+                text1: 'json数据校验失败，不符合格式',
+            })
             return
         }
         const data = await getAnimeList()
